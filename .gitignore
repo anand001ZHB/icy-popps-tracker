@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.angular/
+.env
+.env.*
+!.env.example
+
+.vercel
+
+# Local project archives
+*.zip
+
+# Environment and secret files
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated files
+node_modules/
+dist/
+.angular/
+
+supabase/.temp/
