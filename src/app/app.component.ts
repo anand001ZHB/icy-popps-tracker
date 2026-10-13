@@ -87,7 +87,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         <div class="stats-grid">
           <article class="stat" *ngIf="canSeeFinancials"><span>Sales recorded</span><strong>{{ totalSales | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Payments received</span><strong>{{ totalPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
-          <article class="stat" *ngIf="canSeeFinancials"><span>Estimated pocket profit</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
+          <article class="stat" *ngIf="canSeeFinancials"><span>Estimated profit after all expenses</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and allocated fixed expenses · {{ selectedPeriodDescription('overview') }}</small></article>
           <article class="stat"><span>Daily entries</span><strong>{{ entries.length }}</strong><small>Records visible to your role</small></article>
         </div>
 
@@ -123,7 +123,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
                 <td>{{ salesFor(day) | currency:'INR':'symbol':'1.0-0' }}</td>
                 <td>{{ (day.online_received + day.offline_received) | currency:'INR':'symbol':'1.0-0' }}</td>
                 <td><span [class.positive-value]="salesFor(day) - day.online_received - day.offline_received >= 0" [class.negative-value]="salesFor(day) - day.online_received - day.offline_received < 0">{{ salesFor(day) - day.online_received - day.offline_received | currency:'INR':'symbol':'1.0-0' }}</span></td>
-              </tr></tbody>
+              </tr></tbody><tfoot><tr><th>Period total</th><th>{{ overviewTotals.largeSold }}</th><th>{{ overviewTotals.smallSold }}</th><th>{{ overviewTotals.sales | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ overviewTotals.payments | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ overviewTotals.difference | currency:'INR':'symbol':'1.0-0' }}</th></tr></tfoot>
             </table>
           </div>
         </article>
@@ -137,8 +137,8 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         <form (ngSubmit)="saveEntry()" class="entry-form">
           <label>Date<input type="date" name="entry_date" [(ngModel)]="form.entry_date" (ngModelChange)="onDailyDateChange()" required [readonly]="false"></label>
           <div class="form-section-title">Stock movement (units)</div>
-          <label>Opening stock — Large<input type="number" min="0" name="opening_large" [(ngModel)]="form.opening_large" required [readonly]="autoOpening"></label>
-          <label>Opening stock — Small<input type="number" min="0" name="opening_small" [(ngModel)]="form.opening_small" required [readonly]="autoOpening"></label>
+          <label>Opening stock — Large<input type="number" min="0" name="opening_large" [(ngModel)]="form.opening_large" required [readonly]="autoOpening || (isExistingRecord && !isFirstOpeningRecord)"></label>
+          <label>Opening stock — Small<input type="number" min="0" name="opening_small" [(ngModel)]="form.opening_small" required [readonly]="autoOpening || (isExistingRecord && !isFirstOpeningRecord)"></label>
           <label>Stock received — Large<input type="number" min="0" name="received_large" [(ngModel)]="form.received_large" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label>Stock received — Small<input type="number" min="0" name="received_small" [(ngModel)]="form.received_small" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label>Units sold — Large<input type="number" min="0" name="sold_large" [(ngModel)]="form.sold_large" required [readonly]="isExistingRecord && role === 'staff'"></label>
@@ -168,10 +168,11 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       </section>
 
       <section *ngIf="activeTab==='history'" class="panel">
-        <div class="section-heading"><div><div class="eyebrow">RECORDS</div><h3>Daily entry history</h3></div><button class="btn btn-secondary" (click)="loadEntries()">Refresh</button></div>
+        <div class="section-heading"><div><div class="eyebrow">RECORDS</div><h3>Daily entry history</h3></div></div>
         <div class="table-wrap" *ngIf="entries.length; else noEntries">
-          <table><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th *ngIf="canSeeFinancials">Sales</th><th *ngIf="canSeeFinancials">Payments</th><th>Closing stock L/S</th><th *ngIf="canSeeFinancials">Staff share</th><th>Action</th></tr></thead>
-            <tbody><tr *ngFor="let e of entries"><td>{{ e.entry_date | date:'dd-MM-yyyy' }}</td><td>{{ e.sold_large }}</td><td>{{ e.sold_small }}</td><td *ngIf="canSeeFinancials">{{ salesFor(e) | currency:'INR':'symbol':'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ (e.online_received + e.offline_received) | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ e.closing_large }} / {{ e.closing_small }}</td><td *ngIf="canSeeFinancials">{{ e.staff_share | currency:'INR':'symbol':'1.0-0' }}</td><td><button class="link-btn" (click)="editEntry(e)">{{ canEditEntry(e) ? 'Open / edit' : 'Open' }}</button></td></tr></tbody>
+          <table><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th *ngIf="canSeeFinancials">Sales</th><th *ngIf="canSeeFinancials">Payments</th><th>Closing stock L/S</th><th *ngIf="canSeeFinancials">Staff share</th><th>Notes</th><th>Actions</th></tr></thead>
+            <tbody><tr *ngFor="let e of entries"><td>{{ e.entry_date | date:'dd-MM-yyyy' }}</td><td>{{ e.sold_large }}</td><td>{{ e.sold_small }}</td><td *ngIf="canSeeFinancials">{{ salesFor(e) | currency:'INR':'symbol':'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ (e.online_received + e.offline_received) | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ e.closing_large }} / {{ e.closing_small }}</td><td *ngIf="canSeeFinancials">{{ e.staff_share | currency:'INR':'symbol':'1.0-0' }}</td><td class="notes-cell">{{ e.notes || '—' }}</td><td><button class="link-btn" (click)="editEntry(e)">{{ canEditEntry(e) ? 'Open / edit' : 'Open' }}</button><button *ngIf="canEditEntry(e)" class="link-btn danger-link" [disabled]="busy" (click)="deleteEntry(e)">Delete</button></td></tr></tbody>
+            <tfoot><tr><th>Totals</th><th>{{ historyTotals.largeSold }}</th><th>{{ historyTotals.smallSold }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.sales | currency:'INR':'symbol':'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.payments | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ historyTotals.closingLarge }} / {{ historyTotals.closingSmall }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffShare | currency:'INR':'symbol':'1.0-0' }}</th><th>—</th><th>{{ entries.length }} records</th></tr></tfoot>
           </table>
         </div>
         <ng-template #noEntries><div class="empty-state">No entries found yet. Add your first daily entry.</div></ng-template>
@@ -185,7 +186,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
           <article class="stat"><span>Staff share earned</span><strong>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Cost gap + misc.</span><strong>{{ (report.gap + report.misc) | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Fixed costs for period</span><strong>{{ reportFixedCost | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ activeFixedCostCount }} active cost items · {{ selectedPeriodDescription('report') }}</small></article>
-          <article class="stat highlight"><span>Estimated pocket profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales less expenses; purchase-cost basis</small></article>
+          <article class="stat highlight"><span>Estimated pocket profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and fixed costs for the selected period.</small></article>
           <article class="stat"><span>Staff paid in advance</span><strong>{{ report.paid | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Staff share still due</span><strong>{{ (report.staff - report.paid) | currency:'INR':'symbol':'1.0-0' }}</strong></article>
         </div>
@@ -194,14 +195,22 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
           <article class="visual-card" [class.full-width-chart]="reportDailySeries.length <= 31">
             <div class="visual-heading"><div><h4>Sales vs payments</h4><p>{{ selectedPeriodDescription('report') }}</p></div><div class="chart-legend"><span><i class="key-dot sales-dot"></i>Sales</span><span><i class="key-dot payments-dot"></i>Payments</span></div></div>
             <div class="line-chart-wrap" *ngIf="reportDailySeries.length; else noReportDays">
-              <svg class="line-chart" viewBox="0 0 640 220" role="img" aria-label="Daily sales and payments line chart" preserveAspectRatio="none">
-                <line *ngFor="let y of chartGridY" x1="42" x2="625" [attr.y1]="y" [attr.y2]="y" class="chart-grid-line"></line>
+              <svg class="line-chart" viewBox="0 0 640 250" role="img" aria-label="Daily sales and payments line chart" preserveAspectRatio="none">
+                <line *ngFor="let y of chartGridY" x1="92" x2="625" [attr.y1]="y" [attr.y2]="y" class="chart-grid-line"></line>
+                <line x1="92" y1="35" x2="92" y2="185" class="chart-axis-line"></line>
+                <line x1="92" y1="185" x2="625" y2="185" class="chart-axis-line"></line>
+                <text *ngFor="let y of chartGridY" x="80" [attr.y]="y + 4" text-anchor="end" class="chart-axis-label">{{ chartAxisLabel(y) }}</text>
                 <polyline [attr.points]="chartLinePoints('sales')" class="chart-line sales-line"></polyline>
                 <polyline [attr.points]="chartLinePoints('payments')" class="chart-line payments-line"></polyline>
                 <circle *ngFor="let day of reportDailySeries; let i = index" [attr.cx]="chartPointX(i, reportDailySeries.length)" [attr.cy]="chartPointY(day.sales, reportChartMax)" r="3.5" class="chart-point sales-point"><title>{{ day.label }} sales: {{ day.sales | currency:'INR':'symbol':'1.0-0' }}</title></circle>
                 <circle *ngFor="let day of reportDailySeries; let i = index" [attr.cx]="chartPointX(i, reportDailySeries.length)" [attr.cy]="chartPointY(day.payments, reportChartMax)" r="3.5" class="chart-point payments-point"><title>{{ day.label }} payments: {{ day.payments | currency:'INR':'symbol':'1.0-0' }}</title></circle>
+                <text *ngFor="let day of reportDailySeries; let i = index"
+                      [attr.x]="chartPointX(i, reportDailySeries.length)"
+                      y="232"
+                      text-anchor="middle"
+                      class="chart-date-label"
+                      [attr.transform]="'rotate(-90 ' + chartPointX(i, reportDailySeries.length) + ' 232)'">{{ day.label }}</text>
               </svg>
-              <div class="line-chart-labels"><span *ngFor="let day of reportDailySeries">{{ day.label }}</span></div>
             </div>
             <ng-template #noReportDays><div class="empty-state compact">No entries for the selected month.</div></ng-template>
           </article>
@@ -217,17 +226,16 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
           </article>
         </div>
         <article class="visual-card report-table-card">
-          <div class="visual-heading"><div><h4>Period report table</h4><p>Sales, collections, and recorded costs for each time bucket</p></div></div>
+          <div class="visual-heading"><div><h4>Period report table</h4><p>Sales, collections, and estimated profit after fixed expenses for each period</p></div></div>
           <div class="table-wrap" *ngIf="reportDailySeries.length; else noReportTable">
-            <table><thead><tr><th>Period</th><th>Large sales</th><th>Small sales</th><th>Total sales</th><th>Payments</th><th>Stock paid</th><th>Other costs</th><th>Net before fixed costs</th></tr></thead>
-              <tbody><tr *ngFor="let day of reportDailySeries">
-                <td>{{ day.label }}</td>
-                <td>{{ day.largeSales | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.smallSales | currency:'INR':'symbol':'1.0-0' }}</td>
+            <table><thead><tr><th>Period</th><th>Large sales</th><th>Small sales</th><th>Total sales</th><th>Payments received</th><th>Stock purchased cost</th><th>Staff share</th><th>Cost gap</th><th>Misc. expenses</th><th>Estimated profit after fixed expenses</th></tr></thead>
+              <tbody><tr *ngFor="let day of reportTableRows">
+                <td>{{ day.label }}</td><td>{{ day.largeSales | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.smallSales | currency:'INR':'symbol':'1.0-0' }}</td>
                 <td><strong>{{ day.sales | currency:'INR':'symbol':'1.0-0' }}</strong></td><td>{{ day.payments | currency:'INR':'symbol':'1.0-0' }}</td>
-                <td>{{ day.stock | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.otherCosts | currency:'INR':'symbol':'1.0-0' }}</td>
+                <td>{{ day.stock | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.staffShare | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.costGap | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.miscCosts | currency:'INR':'symbol':'1.0-0' }}</td>
                 <td><span [class.positive-value]="day.net >= 0" [class.negative-value]="day.net < 0">{{ day.net | currency:'INR':'symbol':'1.0-0' }}</span></td>
               </tr></tbody>
-              <tfoot><tr><th colspan="3">Period total</th><th>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.stock | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.gap + report.misc | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</th></tr></tfoot>
+              <tfoot><tr><th>Period total</th><th>{{ reportLargeSalesTotal | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ reportSmallSalesTotal | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.stock | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.gap | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.misc | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.sales - report.stock - report.staff - report.gap - report.misc | currency:'INR':'symbol':'1.0-0' }}</th></tr></tfoot>
             </table>
           </div>
           <ng-template #noReportTable><div class="empty-state compact">No records found for the selected period.</div></ng-template>
@@ -371,6 +379,14 @@ export class AppComponent implements OnInit {
   }
 
   get isAdmin(): boolean { return this.role === 'admin'; }
+  get isFirstOpeningRecord(): boolean {
+    if (!this.editingEntryId || !this.entries.length) return false;
+    const firstDate = this.entries.reduce((min, entry) => entry.entry_date < min ? entry.entry_date : min, this.entries[0].entry_date);
+    return this.form.entry_date === firstDate;
+  }
+  get historyTotals(): { largeSold:number; smallSold:number; sales:number; payments:number; closingLarge:number; closingSmall:number; staffShare:number } {
+    return this.entries.reduce((t,e)=>({largeSold:t.largeSold+Number(e.sold_large||0),smallSold:t.smallSold+Number(e.sold_small||0),sales:t.sales+this.salesFor(e),payments:t.payments+Number(e.online_received||0)+Number(e.offline_received||0),closingLarge:t.closingLarge+Number(e.closing_large||0),closingSmall:t.closingSmall+Number(e.closing_small||0),staffShare:t.staffShare+Number(e.staff_share||0)}),{largeSold:0,smallSold:0,sales:0,payments:0,closingLarge:0,closingSmall:0,staffShare:0});
+  }
   get isExistingRecord(): boolean { return !!this.editingEntryId; }
   get canManageUsers(): boolean { return this.role === 'admin' && !!this.vendorId; }
   get canSeeFinancials(): boolean { return this.role === 'admin' || this.role === 'manager'; }
@@ -390,7 +406,7 @@ export class AppComponent implements OnInit {
     let start=new Date(today), end=new Date(today);
     if(preset==='yesterday'){start.setDate(start.getDate()-1);end=new Date(start);}
     else if(preset==='last7'){start.setDate(start.getDate()-6);}
-    else if(preset==='currentMonth'){start=new Date(today.getFullYear(),today.getMonth(),1,12);}
+    else if(preset==='currentMonth'){start=new Date(today.getFullYear(),today.getMonth(),1,12);end=new Date(today);end.setDate(today.getDate()-1);}
     else if(preset==='lastMonth'){start=new Date(today.getFullYear(),today.getMonth()-1,1,12);end=new Date(today.getFullYear(),today.getMonth(),0,12);}
     else if(preset==='last3Months'){start=new Date(today.getFullYear(),today.getMonth()-2,1,12);}
     else if(preset==='last6Months'){start=new Date(today.getFullYear(),today.getMonth()-5,1,12);}
@@ -486,26 +502,30 @@ export class AppComponent implements OnInit {
     const max = Math.max(1,...buckets.map(b=>b.sales));
     return buckets.map(b=>({...b,barHeight:`${b.sales>0?Math.max(5,b.sales/max*100):2}%`}));
   }
-  get overviewPerformance(): Entry[] { return this.overviewPeriodEntries.slice().sort((a,b)=>a.entry_date.localeCompare(b.entry_date)); }
-  get reportDailySeries(): Array<{ entry_date: string; label: string; largeSales: number; smallSales: number; sales: number; payments: number; stock: number; otherCosts: number; net: number }> {
+  get overviewPerformance(): Entry[] { return this.overviewPeriodEntries.slice().sort((a,b)=>b.entry_date.localeCompare(a.entry_date)); }
+  get overviewTotals(): {largeSold:number;smallSold:number;sales:number;payments:number;difference:number} { return this.overviewPeriodEntries.reduce((t,e)=>{const sales=this.salesFor(e);const payments=Number(e.online_received||0)+Number(e.offline_received||0);return {largeSold:t.largeSold+Number(e.sold_large||0),smallSold:t.smallSold+Number(e.sold_small||0),sales:t.sales+sales,payments:t.payments+payments,difference:t.difference+sales-payments};},{largeSold:0,smallSold:0,sales:0,payments:0,difference:0}); }
+  get reportDailySeries(): Array<{ entry_date: string; label: string; largeSales: number; smallSales: number; sales: number; payments: number; stock: number; staffShare: number; costGap: number; miscCosts: number; otherCosts: number; net: number }> {
     const list = this.entriesForSelection('report').slice().sort((a,b)=>a.entry_date.localeCompare(b.entry_date));
     const range = this.selectedRange(this.reportPreset,this.reportDate,this.reportStart,this.reportEnd);
     const spanDays = Math.round((new Date(range.end+'T12:00:00').getTime()-new Date(range.start+'T12:00:00').getTime())/86400000)+1;
     const aggregateMonthly = spanDays > 31;
-    const map = new Map<string, {entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;stock:number;otherCosts:number;net:number}>();
+    const map = new Map<string, {entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;stock:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;net:number}>();
     for (const e of list) {
       const d = new Date(e.entry_date+'T12:00:00');
       const key = aggregateMonthly ? e.entry_date.slice(0,7) : e.entry_date;
       const label = aggregateMonthly ? d.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}) : d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
       const largeSales=this.largeSalesFor(e), smallSales=this.smallSalesFor(e), sales=largeSales+smallSales;
       const payments=Number(e.online_received||0)+Number(e.offline_received||0), stock=Number(e.stock_purchase_paid||0);
-      const otherCosts=Number(e.staff_share ?? (largeSales*this.settings.large_staff_pct/100+smallSales*this.settings.small_staff_pct/100))+Number(e.cost_gap||0)+Number(e.miscellaneous_expenses||0);
-      const prior=map.get(key) || {entry_date:key,label,largeSales:0,smallSales:0,sales:0,payments:0,stock:0,otherCosts:0,net:0};
-      prior.largeSales+=largeSales; prior.smallSales+=smallSales; prior.sales+=sales; prior.payments+=payments; prior.stock+=stock; prior.otherCosts+=otherCosts; prior.net+=sales-stock-otherCosts; map.set(key,prior);
+      const staffShare=Number(e.staff_share ?? (largeSales*this.settings.large_staff_pct/100+smallSales*this.settings.small_staff_pct/100)); const costGap=Number(e.cost_gap||0); const miscCosts=Number(e.miscellaneous_expenses||0); const otherCosts=staffShare+costGap+miscCosts;
+      const prior=map.get(key) || {entry_date:key,label,largeSales:0,smallSales:0,sales:0,payments:0,stock:0,staffShare:0,costGap:0,miscCosts:0,otherCosts:0,net:0};
+      prior.largeSales+=largeSales; prior.smallSales+=smallSales; prior.sales+=sales; prior.payments+=payments; prior.stock+=stock; prior.staffShare+=staffShare; prior.costGap+=costGap; prior.miscCosts+=miscCosts; prior.otherCosts+=otherCosts; prior.net+=sales-stock-otherCosts; map.set(key,prior);
     }
-    if (aggregateMonthly) { const cursor=new Date(range.start+'T12:00:00'); const last=new Date(range.end+'T12:00:00'); cursor.setDate(1); while(cursor<=last){const key=`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;if(!map.has(key))map.set(key,{entry_date:key,label:cursor.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}),largeSales:0,smallSales:0,sales:0,payments:0,stock:0,otherCosts:0,net:0});cursor.setMonth(cursor.getMonth()+1);} }
+    if (aggregateMonthly) { const cursor=new Date(range.start+'T12:00:00'); const last=new Date(range.end+'T12:00:00'); cursor.setDate(1); while(cursor<=last){const key=`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;if(!map.has(key))map.set(key,{entry_date:key,label:cursor.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}),largeSales:0,smallSales:0,sales:0,payments:0,stock:0,staffShare:0,costGap:0,miscCosts:0,otherCosts:0,net:0});cursor.setMonth(cursor.getMonth()+1);} }
     return [...map.values()].sort((a,b)=>a.entry_date.localeCompare(b.entry_date));
   }
+  get reportTableRows(): Array<{entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;stock:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;net:number}> { return this.reportDailySeries.slice().reverse().map(day => { const date = day.entry_date.length === 7 ? `${day.entry_date}-01` : day.entry_date; const d = new Date(date + 'T12:00:00'); const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); const fixedShare = day.entry_date.length === 7 ? this.fixedMonthly : this.fixedMonthly / daysInMonth; return { ...day, net: day.net - fixedShare }; }); }
+  get reportLargeSalesTotal(): number { return this.reportDailySeries.reduce((sum,day)=>sum+day.largeSales,0); }
+  get reportSmallSalesTotal(): number { return this.reportDailySeries.reduce((sum,day)=>sum+day.smallSales,0); }
   get reportPayments(): number { return this.reportDailySeries.reduce((sum, day) => sum + day.payments, 0); }
   get reportTotalExpenses(): number { return this.report.stock + this.report.staff + this.report.gap + this.report.misc + this.reportFixedCost; }
   get reportExpenseBreakdown(): Array<{ label: string; amount: number; width: string }> {
@@ -513,8 +533,10 @@ export class AppComponent implements OnInit {
     const max=Math.max(1,...items.map(item=>item.amount)); return items.map(item=>({...item,width:`${Math.max(item.amount>0?2:0,item.amount/max*100)}%`}));
   }
   get reportChartMax(): number { return Math.max(1,...this.reportDailySeries.flatMap(day=>[day.sales,day.payments])); }
-  get chartGridY(): number[] { return [35,80,125,170]; }
-  chartPointX(index:number,count:number):number { return count<=1?333:42+(index*583/(count-1)); }
+  get chartGridY(): number[] { return [35,85,135,185]; }
+  chartAxisValue(y:number): number { return this.reportChartMax * Math.max(0, (185-y)/150); }
+  chartAxisLabel(y:number): string { const value=this.chartAxisValue(y); if (value <= 0) return '₹0'; if (value >= 1000) return '₹' + (value/1000).toLocaleString('en-IN',{maximumFractionDigits:1}) + 'k'; return '₹' + Math.round(value).toLocaleString('en-IN'); }
+  chartPointX(index:number,count:number):number { return count<=1?358.5:92+(index*533/(count-1)); }
   chartPointY(value:number,max:number):number { return 185-(Math.max(0,value)/Math.max(1,max))*150; }
   chartLinePoints(key:'sales'|'payments'):string { return this.reportDailySeries.map((day,index)=>`${this.chartPointX(index,this.reportDailySeries.length)},${this.chartPointY(day[key],this.reportChartMax)}`).join(' '); }
   private emptyEntry(): Entry {
@@ -815,6 +837,21 @@ export class AppComponent implements OnInit {
     this.activeTab = 'daily';
     this.clearAlerts();
   }
+  async deleteEntry(e: Entry): Promise<void> {
+    if (!this.canEditEntry(e) || !e.id || !this.supabase) return;
+    if (!confirm(`Permanently delete the daily entry for ${e.entry_date}? This cannot be undone.`)) return;
+    this.clearAlerts(); this.busy = true;
+    try {
+      const client = this.requireClient();
+      const { error: financialError } = await client.from('daily_financials').delete().eq('daily_entry_id', e.id);
+      if (financialError && !/does not exist|relation.*daily_financials/i.test(financialError.message || '')) throw financialError;
+      const { error } = await client.from('daily_entries').delete().eq('id', e.id);
+      if (error) throw error;
+      this.message = `Daily entry for ${e.entry_date} was deleted.`;
+      await this.loadEntries();
+    } catch (err) { this.error = this.errMsg(err); }
+    finally { this.busy = false; }
+  }
   canEditEntry(_e: Entry): boolean { return this.role === 'admin' || this.role === 'manager'; }
   largeSalesFor(e: Entry): number { return Number(e.large_sales ?? Number(e.sold_large || 0) * this.settings.large_price); }
   smallSalesFor(e: Entry): number { return Number(e.small_sales ?? Number(e.sold_small || 0) * this.settings.small_price); }
@@ -992,9 +1029,9 @@ export class AppComponent implements OnInit {
     try {
       const { data, error } = await this.requireClient().functions.invoke('admin-user-management', { body: { action: 'list', vendorId: this.vendorId } });
       if (error) throw error;
-      this.profiles = (data?.users || []) as Profile[];
-      this.vendors = data?.vendors || [];
-      this.vendorRequests = (data?.vendorRequests || []) as VendorRequest[];
+      this.profiles = ((data?.users || []) as Profile[]).slice().sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+      this.vendors = (data?.vendors || []).slice().sort((a: any,b: any)=>(b.created_at||'').localeCompare(a.created_at||''));
+      this.vendorRequests = ((data?.vendorRequests || []) as VendorRequest[]).slice().sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
       this.approvalDrafts = {};
       for (const p of this.profiles) this.approvalDrafts[p.id] = { vendor_id: p.vendor_id || '', role: p.role === 'manager' ? 'manager' : 'staff' };
     } catch (e) { this.error = this.errMsg(e); }
