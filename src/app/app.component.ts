@@ -87,6 +87,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         <div class="stats-grid">
           <article class="stat" *ngIf="canSeeFinancials"><span>Sales recorded</span><strong>{{ totalSales | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Payments received</span><strong>{{ totalPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
+          <article class="stat" *ngIf="canSeeFinancials"><span>Average daily sales</span><strong>{{ averageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Estimated profit after all expenses</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and allocated fixed expenses · {{ selectedPeriodDescription('overview') }}</small></article>
           <article class="stat"><span>Daily entries</span><strong>{{ entries.length }}</strong><small>Records visible to your role</small></article>
         </div>
@@ -119,7 +120,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
           <div class="table-wrap">
             <table><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th>Sales</th><th>Payments received</th><th>Difference</th></tr></thead>
               <tbody><tr *ngFor="let day of overviewPerformance">
-                <td>{{ day.entry_date | date:'dd-MM-yyyy' }}</td><td>{{ day.sold_large }}</td><td>{{ day.sold_small }}</td>
+                <td>{{ day.entry_date | date:'d MMM yyyy' }}</td><td>{{ day.sold_large }}</td><td>{{ day.sold_small }}</td>
                 <td>{{ salesFor(day) | currency:'INR':'symbol':'1.0-0' }}</td>
                 <td>{{ (day.online_received + day.offline_received) | currency:'INR':'symbol':'1.0-0' }}</td>
                 <td><span [class.positive-value]="salesFor(day) - day.online_received - day.offline_received >= 0" [class.negative-value]="salesFor(day) - day.online_received - day.offline_received < 0">{{ salesFor(day) - day.online_received - day.offline_received | currency:'INR':'symbol':'1.0-0' }}</span></td>
@@ -170,9 +171,9 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       <section *ngIf="activeTab==='history'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">RECORDS</div><h3>Daily entry history</h3></div></div>
         <div class="table-wrap" *ngIf="entries.length; else noEntries">
-          <table><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th *ngIf="canSeeFinancials">Sales</th><th *ngIf="canSeeFinancials">Payments</th><th>Closing stock L/S</th><th *ngIf="canSeeFinancials">Staff share</th><th>Notes</th><th>Actions</th></tr></thead>
-            <tbody><tr *ngFor="let e of entries"><td>{{ e.entry_date | date:'dd-MM-yyyy' }}</td><td>{{ e.sold_large }}</td><td>{{ e.sold_small }}</td><td *ngIf="canSeeFinancials">{{ salesFor(e) | currency:'INR':'symbol':'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ (e.online_received + e.offline_received) | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ e.closing_large }} / {{ e.closing_small }}</td><td *ngIf="canSeeFinancials">{{ e.staff_share | currency:'INR':'symbol':'1.0-0' }}</td><td class="notes-cell">{{ e.notes || '—' }}</td><td><button class="link-btn" (click)="editEntry(e)">{{ canEditEntry(e) ? 'Open / edit' : 'Open' }}</button><button *ngIf="canEditEntry(e)" class="link-btn danger-link" [disabled]="busy" (click)="deleteEntry(e)">Delete</button></td></tr></tbody>
-            <tfoot><tr><th>Totals</th><th>{{ historyTotals.largeSold }}</th><th>{{ historyTotals.smallSold }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.sales | currency:'INR':'symbol':'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.payments | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ historyTotals.closingLarge }} / {{ historyTotals.closingSmall }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffShare | currency:'INR':'symbol':'1.0-0' }}</th><th>—</th><th>{{ entries.length }} records</th></tr></tfoot>
+          <table><thead><tr><th>Date</th><th>Opening stock L/S</th><th>Closing stock L/S</th><th>Large sold</th><th>Small sold</th><th *ngIf="canSeeFinancials">Sales (₹)</th><th *ngIf="canSeeFinancials">Online / Offline (₹)</th><th *ngIf="canSeeFinancials">Payment received (₹)</th><th *ngIf="canSeeFinancials">Cost gap (₹)</th><th *ngIf="canSeeFinancials">Misc. expenses (₹)</th><th *ngIf="canSeeFinancials">Staff took (₹)</th><th *ngIf="canSeeFinancials">Staff share (₹)</th><th>Notes</th><th>Actions</th></tr></thead>
+            <tbody><tr *ngFor="let e of entries"><td>{{ e.entry_date | date:'d MMM yyyy' }}</td><td>{{ e.opening_large }} / {{ e.opening_small }}</td><td>{{ e.closing_large }} / {{ e.closing_small }}</td><td>{{ e.sold_large }}</td><td>{{ e.sold_small }}</td><td *ngIf="canSeeFinancials">{{ salesFor(e) | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.online_received | number:'1.0-0' }} / {{ e.offline_received | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ (e.online_received + e.offline_received) | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.cost_gap | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.miscellaneous_expenses | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.staff_paid_today | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.staff_share | number:'1.0-0' }}</td><td class="notes-cell">{{ e.notes || '—' }}</td><td><button class="link-btn" (click)="editEntry(e)">{{ canEditEntry(e) ? 'Open / edit' : 'Open' }}</button><button *ngIf="canEditEntry(e)" class="link-btn danger-link" [disabled]="busy" (click)="deleteEntry(e)">Delete</button></td></tr></tbody>
+            <tfoot><tr><th>Totals</th><th></th><th></th><th>{{ historyTotals.largeSold }}</th><th>{{ historyTotals.smallSold }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.sales | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.onlineReceived | number:'1.0-0' }} / {{ historyTotals.offlineReceived | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.payments | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.costGap | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.miscellaneousExpenses | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffTook | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffShare | number:'1.0-0' }}</th><th></th><th>{{ entries.length }} records</th></tr></tfoot>
           </table>
         </div>
         <ng-template #noEntries><div class="empty-state">No entries found yet. Add your first daily entry.</div></ng-template>
@@ -184,7 +185,11 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
           <article class="stat"><span>Total sales</span><strong>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Stock purchases paid</span><strong>{{ report.stock | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Staff share earned</span><strong>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-          <article class="stat"><span>Cost gap + misc.</span><strong>{{ (report.gap + report.misc) | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+          <article class="stat"><span>Online payments</span><strong>{{ reportOnlinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+          <article class="stat"><span>Offline payments</span><strong>{{ reportOfflinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+          <article class="stat highlight"><span>Total payments received</span><strong>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Online + offline payments</small></article>
+          <article class="stat"><span>Cost gap</span><strong>{{ report.gap | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+          <article class="stat"><span>Miscellaneous expenses</span><strong>{{ report.misc | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Fixed costs for period</span><strong>{{ reportFixedCost | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ activeFixedCostCount }} active cost items · {{ selectedPeriodDescription('report') }}</small></article>
           <article class="stat highlight"><span>Estimated pocket profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and fixed costs for the selected period.</small></article>
           <article class="stat"><span>Staff paid in advance</span><strong>{{ report.paid | currency:'INR':'symbol':'1.0-0' }}</strong></article>
@@ -262,7 +267,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         </div>
         <div class="user-summary"><strong>{{ pendingProfiles.length }}</strong><span>pending approval</span><strong>{{ profiles.length }}</strong><span>total accounts</span></div>
         <div class="table-wrap"><table><thead><tr><th>Name / Email</th><th>Registered</th><th>Status</th><th>Vendor</th><th>Role</th><th>Action</th></tr></thead><tbody>
-          <tr *ngFor="let p of profiles"><td>{{ p.full_name || '—' }}<small class="user-email">{{ p.email || '' }}</small></td><td>{{ p.created_at ? (p.created_at | date:'dd-MM-yyyy') : '—' }}</td><td><span class="role-pill" [class.pending-pill]="p.approval_status !== 'approved'">{{ p.approval_status || 'approved' }}</span></td>
+          <tr *ngFor="let p of profiles"><td>{{ p.full_name || '—' }}<small class="user-email">{{ p.email || '' }}</small></td><td>{{ p.created_at ? (p.created_at | date:'d MMM yyyy') : '—' }}</td><td><span class="role-pill" [class.pending-pill]="p.approval_status !== 'approved'">{{ p.approval_status || 'approved' }}</span></td>
           <td *ngIf="isPlatformAdmin"><select [name]="'vendor-' + p.id" [(ngModel)]="approvalDrafts[p.id].vendor_id"><option value="">Choose vendor</option><option *ngFor="let v of vendors" [value]="v.id">{{ v.name }}</option></select></td><td *ngIf="!isPlatformAdmin">{{ vendorName(p.vendor_id) || currentVendorCode || 'Your cart' }}</td>
           <td><ng-container *ngIf="p.role !== 'admin'; else adminRoleLabel"><select [name]="'role-' + p.id" [(ngModel)]="approvalDrafts[p.id].role"><option value="staff">Staff</option><option value="manager">Manager</option></select></ng-container><ng-template #adminRoleLabel><span class="role-pill">{{ p.is_platform_admin ? 'Platform Owner' : 'Vendor Admin' }}</span></ng-template></td>
           <td class="user-action-cell"><button *ngIf="p.role !== 'admin' && p.approval_status !== 'disabled'" class="btn btn-primary btn-small" [disabled]="busy || (!isPlatformAdmin && p.requested_vendor_code && p.requested_vendor_code !== currentVendorCode)" (click)="approveUser(p)">{{ p.approval_status === 'approved' ? 'Save role' : 'Approve' }}</button><span *ngIf="p.role === 'admin'" class="muted small">{{ p.is_platform_admin ? 'Platform Owner' : 'Vendor Admin' }}</span><button *ngIf="isPlatformAdmin && p.id !== user?.id && p.approval_status !== 'disabled'" class="btn btn-secondary btn-small" [disabled]="busy" (click)="setUserDisabled(p, true)">Disable</button><button *ngIf="isPlatformAdmin && p.approval_status === 'disabled'" class="btn btn-secondary btn-small" [disabled]="busy" (click)="setUserDisabled(p, false)">Enable</button><button *ngIf="(isPlatformAdmin && p.id !== user?.id) || (!isPlatformAdmin && p.role !== 'admin')" class="link-btn danger-link" [disabled]="busy" (click)="deleteUser(p)">Delete</button></td></tr>
@@ -384,8 +389,8 @@ export class AppComponent implements OnInit {
     const firstDate = this.entries.reduce((min, entry) => entry.entry_date < min ? entry.entry_date : min, this.entries[0].entry_date);
     return this.form.entry_date === firstDate;
   }
-  get historyTotals(): { largeSold:number; smallSold:number; sales:number; payments:number; closingLarge:number; closingSmall:number; staffShare:number } {
-    return this.entries.reduce((t,e)=>({largeSold:t.largeSold+Number(e.sold_large||0),smallSold:t.smallSold+Number(e.sold_small||0),sales:t.sales+this.salesFor(e),payments:t.payments+Number(e.online_received||0)+Number(e.offline_received||0),closingLarge:t.closingLarge+Number(e.closing_large||0),closingSmall:t.closingSmall+Number(e.closing_small||0),staffShare:t.staffShare+Number(e.staff_share||0)}),{largeSold:0,smallSold:0,sales:0,payments:0,closingLarge:0,closingSmall:0,staffShare:0});
+  get historyTotals(): { largeSold:number; smallSold:number; sales:number; payments:number; onlineReceived:number; offlineReceived:number; costGap:number; miscellaneousExpenses:number; closingLarge:number; closingSmall:number; staffShare:number; staffTook:number } {
+    return this.entries.reduce((t,e)=>({largeSold:t.largeSold+Number(e.sold_large||0),smallSold:t.smallSold+Number(e.sold_small||0),sales:t.sales+this.salesFor(e),payments:t.payments+Number(e.online_received||0)+Number(e.offline_received||0),onlineReceived:t.onlineReceived+Number(e.online_received||0),offlineReceived:t.offlineReceived+Number(e.offline_received||0),costGap:t.costGap+Number(e.cost_gap||0),miscellaneousExpenses:t.miscellaneousExpenses+Number(e.miscellaneous_expenses||0),closingLarge:t.closingLarge+Number(e.closing_large||0),closingSmall:t.closingSmall+Number(e.closing_small||0),staffShare:t.staffShare+Number(e.staff_share||0),staffTook:t.staffTook+Number(e.staff_paid_today||0)}),{largeSold:0,smallSold:0,sales:0,payments:0,onlineReceived:0,offlineReceived:0,costGap:0,miscellaneousExpenses:0,closingLarge:0,closingSmall:0,staffShare:0,staffTook:0});
   }
   get isExistingRecord(): boolean { return !!this.editingEntryId; }
   get canManageUsers(): boolean { return this.role === 'admin' && !!this.vendorId; }
@@ -448,6 +453,13 @@ export class AppComponent implements OnInit {
     while(cursor<=last){const days=new Date(cursor.getFullYear(),cursor.getMonth()+1,0).getDate();total+=this.fixedMonthly/days;cursor.setDate(cursor.getDate()+1);} return total;
   }
   get totalSales(): number { return this.entriesForSelection('overview').reduce((sum, e) => sum + this.salesFor(e), 0); }
+  get averageDailySales(): number {
+    const range = this.selectedRange(this.overviewPreset, this.overviewDate, this.overviewStart, this.overviewEnd);
+    const start = new Date(range.start + 'T12:00:00');
+    const end = new Date(range.end + 'T12:00:00');
+    const days = Math.max(1, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1);
+    return this.totalSales / days;
+  }
   get totalPayments(): number { return this.entriesForSelection('overview').reduce((sum, e) => sum + Number(e.online_received || 0) + Number(e.offline_received || 0), 0); }
   get pocketProfit(): number { const list = this.entriesForSelection('overview'); return list.reduce((sum, e) => sum + this.salesFor(e) - Number(e.stock_purchase_paid || 0) - Number(e.staff_share || 0) - Number(e.cost_gap || 0) - Number(e.miscellaneous_expenses || 0), 0) - this.fixedCostForSelection('overview'); }
   get reportFixedCost(): number { return this.fixedCostForSelection('report'); }
@@ -495,7 +507,7 @@ export class AppComponent implements OnInit {
       while (cursor <= end) {
         const key = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`;
         const sales = this.overviewPeriodEntries.filter(e => e.entry_date === key).reduce((sum,e)=>sum+this.salesFor(e),0);
-        buckets.push({ date:key, label:cursor.toLocaleDateString('en-IN',{day:'numeric',month:'short'}), sales, barHeight:'3%' });
+        buckets.push({ date:key, label:cursor.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}), sales, barHeight:'3%' });
         cursor.setDate(cursor.getDate()+1);
       }
     }
@@ -513,7 +525,7 @@ export class AppComponent implements OnInit {
     for (const e of list) {
       const d = new Date(e.entry_date+'T12:00:00');
       const key = aggregateMonthly ? e.entry_date.slice(0,7) : e.entry_date;
-      const label = aggregateMonthly ? d.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}) : d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+      const label = aggregateMonthly ? d.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}) : d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
       const largeSales=this.largeSalesFor(e), smallSales=this.smallSalesFor(e), sales=largeSales+smallSales;
       const payments=Number(e.online_received||0)+Number(e.offline_received||0), stock=Number(e.stock_purchase_paid||0);
       const staffShare=Number(e.staff_share ?? (largeSales*this.settings.large_staff_pct/100+smallSales*this.settings.small_staff_pct/100)); const costGap=Number(e.cost_gap||0); const miscCosts=Number(e.miscellaneous_expenses||0); const otherCosts=staffShare+costGap+miscCosts;
@@ -526,7 +538,9 @@ export class AppComponent implements OnInit {
   get reportTableRows(): Array<{entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;stock:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;net:number}> { return this.reportDailySeries.slice().reverse().map(day => { const date = day.entry_date.length === 7 ? `${day.entry_date}-01` : day.entry_date; const d = new Date(date + 'T12:00:00'); const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); const fixedShare = day.entry_date.length === 7 ? this.fixedMonthly : this.fixedMonthly / daysInMonth; return { ...day, net: day.net - fixedShare }; }); }
   get reportLargeSalesTotal(): number { return this.reportDailySeries.reduce((sum,day)=>sum+day.largeSales,0); }
   get reportSmallSalesTotal(): number { return this.reportDailySeries.reduce((sum,day)=>sum+day.smallSales,0); }
-  get reportPayments(): number { return this.reportDailySeries.reduce((sum, day) => sum + day.payments, 0); }
+  get reportOnlinePayments(): number { return this.entriesForSelection('report').reduce((sum, entry) => sum + Number(entry.online_received || 0), 0); }
+  get reportOfflinePayments(): number { return this.entriesForSelection('report').reduce((sum, entry) => sum + Number(entry.offline_received || 0), 0); }
+  get reportPayments(): number { return this.reportOnlinePayments + this.reportOfflinePayments; }
   get reportTotalExpenses(): number { return this.report.stock + this.report.staff + this.report.gap + this.report.misc + this.reportFixedCost; }
   get reportExpenseBreakdown(): Array<{ label: string; amount: number; width: string }> {
     const items = [{label:'Stock purchases paid',amount:this.report.stock},{label:'Staff share earned',amount:this.report.staff},{label:'Cost gap',amount:this.report.gap},{label:'Miscellaneous',amount:this.report.misc},{label:'Fixed costs for period',amount:this.reportFixedCost}];
@@ -797,7 +811,7 @@ export class AppComponent implements OnInit {
       const savedDate = this.form.entry_date;
       await this.loadEntries();
       await this.loadEntryForDate(savedDate);
-      this.activeTab = 'daily';
+      this.activeTab = 'overview';
     } catch (e) {
       this.error = this.errMsg(e);
     } finally {
