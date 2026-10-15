@@ -32,7 +32,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       <div class="brand-mark">IP</div>
       <div class="brand-copy"><h1>Icy Popps</h1><p>Business tracker</p></div>
       <div class="top-actions">
-        <button class="btn btn-ghost theme-toggle" type="button" (click)="toggleTheme()" [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">{{ isDarkMode ? '☀️' : '🌙' }}</button>
+        <button class="btn btn-ghost theme-toggle" type="button" (click)="toggleTheme()" [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'" [title]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">{{ isDarkMode ? '☀️' : '🌙' }}</button>
         <ng-container *ngIf="user">
           <span class="role-pill">{{ role | titlecase }}</span>
           <button class="btn btn-ghost" (click)="signOut()">Sign out</button>
@@ -420,12 +420,12 @@ export class AppComponent implements OnInit {
     const fmt=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     let start=new Date(today), end=new Date(today);
     if(preset==='yesterday'){start.setDate(start.getDate()-1);end=new Date(start);}
-    else if(preset==='last7'){start.setDate(start.getDate()-6);}
+    else if(preset==='last7'){start.setDate(start.getDate()-7);end.setDate(end.getDate()-1);}
     else if(preset==='currentMonth'){start=new Date(today.getFullYear(),today.getMonth(),1,12);end=new Date(today);end.setDate(today.getDate()-1);}
     else if(preset==='lastMonth'){start=new Date(today.getFullYear(),today.getMonth()-1,1,12);end=new Date(today.getFullYear(),today.getMonth(),0,12);}
     else if(preset==='last3Months'){start=new Date(today.getFullYear(),today.getMonth()-3,1,12);end=new Date(today.getFullYear(),today.getMonth(),0,12);}
     else if(preset==='last6Months'){start=new Date(today.getFullYear(),today.getMonth()-6,1,12);end=new Date(today.getFullYear(),today.getMonth(),0,12);}
-    else if(preset==='currentYear'){start=new Date(today.getFullYear(),0,1,12);}
+    else if(preset==='currentYear'){start=new Date(today.getFullYear(),0,1,12);end.setDate(today.getDate()-1);}
     else if(preset==='lastYear'){start=new Date(today.getFullYear()-1,0,1,12);end=new Date(today.getFullYear()-1,11,31,12);}
     else if(preset==='custom'){ const a=customStart||customEnd||fmt(today), b=customEnd||customStart||fmt(today); return {start:a<=b?a:b,end:a<=b?b:a}; }
     else if(preset==='today'){start=new Date(today);end=new Date(today);}
