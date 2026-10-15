@@ -299,3 +299,89 @@ tfoot th{background:#fff7ed;color:#7c2d12;border-top:2px solid #f2ddc8}
   .line-chart { height: 230px; }
   .chart-date-label { font-size: 8px; }
 }
+
+
+/* Selected date range shown alongside Overview and Reports headings */
+.heading-date-range { font-size: 0.72em; font-weight: 500; color: var(--muted, #64748b); white-space: normal; }
+
+
+/* Dark mode theme. The user's choice is persisted in localStorage. */
+html.dark-mode { color-scheme: dark; background: #111827; }
+html.dark-mode body { background: #111827; color: #e5e7eb; }
+html.dark-mode .shell { color: #e5e7eb; }
+html.dark-mode .topbar { border-bottom-color: #374151; }
+html.dark-mode .brand-copy p,
+html.dark-mode .muted,
+html.dark-mode .stat span,
+html.dark-mode .stat small,
+html.dark-mode .visual-heading p,
+html.dark-mode .chart-key,
+html.dark-mode .chart-legend,
+html.dark-mode .bar-value,
+html.dark-mode .bar-label,
+html.dark-mode .mix-legend>div,
+html.dark-mode .mix-legend small,
+html.dark-mode .expense-label,
+html.dark-mode .expense-total,
+html.dark-mode .line-chart-labels span,
+html.dark-mode .chart-date-label { color: #9ca3af; }
+html.dark-mode .login-card,
+html.dark-mode .panel,
+html.dark-mode .visual-card { background: #1f2937; border-color: #374151; box-shadow: 0 8px 24px #00000020; }
+html.dark-mode .login-card h2,
+html.dark-mode .welcome-row h2,
+html.dark-mode .section-heading h3,
+html.dark-mode .visual-heading h4,
+html.dark-mode .mix-legend strong,
+html.dark-mode .expense-label strong,
+html.dark-mode .expense-total strong,
+html.dark-mode .stat strong,
+html.dark-mode .mix-ring-center strong { color: #f9fafb; }
+html.dark-mode label { color: #d1d5db; }
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea { background: #111827; border-color: #4b5563; color: #f3f4f6; }
+html.dark-mode input::placeholder,
+html.dark-mode textarea::placeholder { color: #6b7280; }
+html.dark-mode input[readonly] { background: #273449; color: #cbd5e1; }
+html.dark-mode .btn-ghost { color: #e5e7eb; border-color: #4b5563; }
+html.dark-mode .btn-secondary { background: #3b2b1f; color: #fed7aa; }
+html.dark-mode .role-pill { background: #3b2b1f; color: #fdba74; }
+html.dark-mode .tabs { background: #111827; border: 1px solid #374151; }
+html.dark-mode .tabs button { color: #9ca3af; }
+html.dark-mode .tabs button.active { background: #374151; color: #fdba74; box-shadow: none; }
+html.dark-mode .stat { background: #273449; border-color: #374151; }
+html.dark-mode .stat.highlight { background: #3b2b1f; border-color: #7c2d12; }
+html.dark-mode .callout,
+html.dark-mode .preview { background: #292524; border-color: #57534e; color: #fed7aa; }
+html.dark-mode .preview span { color: #9ca3af; }
+html.dark-mode .form-section-title { color: #fdba74; border-bottom-color: #374151; }
+html.dark-mode td { color: #d1d5db; border-bottom-color: #374151; }
+html.dark-mode th { background: #273449; color: #cbd5e1; }
+html.dark-mode .notice { background: #422006; color: #fed7aa; }
+html.dark-mode .error { background: #450a0a; color: #fecaca; }
+html.dark-mode .empty-state { color: #9ca3af; }
+html.dark-mode footer { color: #6b7280; }
+html.dark-mode .bar-track,
+html.dark-mode .expense-track { background: #374151; }
+html.dark-mode .mix-ring:before { background: #1f2937; }
+html.dark-mode .chart-grid-line { stroke: #374151; }
+html.dark-mode .chart-point { stroke: #1f2937; }
+html.dark-mode .positive-value { color: #4ade80; }
+html.dark-mode .negative-value { color: #fb923c; }
+html.dark-mode .vendor-code-chip { color: #e5e7eb; }
+html.dark-mode .heading-date-range { color: #9ca3af; }
+
+
+/* Compact icon-only light/dark theme toggle */
+.theme-toggle {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  line-height: 1;
+}

@@ -31,9 +31,12 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
     <header class="topbar">
       <div class="brand-mark">IP</div>
       <div class="brand-copy"><h1>Icy Popps</h1><p>Business tracker</p></div>
-      <div class="top-actions" *ngIf="user">
-        <span class="role-pill">{{ role | titlecase }}</span>
-        <button class="btn btn-ghost" (click)="signOut()">Sign out</button>
+      <div class="top-actions">
+        <button class="btn btn-ghost theme-toggle" type="button" (click)="toggleTheme()" [attr.aria-label]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">{{ isDarkMode ? '☀️' : '🌙' }}</button>
+        <ng-container *ngIf="user">
+          <span class="role-pill">{{ role | titlecase }}</span>
+          <button class="btn btn-ghost" (click)="signOut()">Sign out</button>
+        </ng-container>
       </div>
     </header>
 
@@ -83,13 +86,12 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       <p class="error" *ngIf="error">{{ error }}</p>
 
       <section *ngIf="activeTab==='overview'" class="panel">
-        <div class="section-heading"><div><div class="eyebrow">AT A GLANCE</div><h3>Business overview</h3></div><div class="period-controls"><label>Show<select [(ngModel)]="overviewPreset" (ngModelChange)="onOverviewPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="overviewPreset==='custom'"><label>From<input type="date" [(ngModel)]="overviewStart" (ngModelChange)="onOverviewDateChange()" aria-label="Start date for overview"></label><label>To<input type="date" [(ngModel)]="overviewEnd" (ngModelChange)="onOverviewDateChange()" aria-label="End date for overview"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('overview')">Reset</button></div></div>
+        <div class="section-heading"><div><div class="eyebrow">AT A GLANCE</div><h3>Business overview <span class="heading-date-range">({{ selectedPeriodDescription('overview') }})</span></h3></div><div class="period-controls"><label>Show<select [(ngModel)]="overviewPreset" (ngModelChange)="onOverviewPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="overviewPreset==='custom'"><label>From<input type="date" [(ngModel)]="overviewStart" (ngModelChange)="onOverviewDateChange()" aria-label="Start date for overview"></label><label>To<input type="date" [(ngModel)]="overviewEnd" (ngModelChange)="onOverviewDateChange()" aria-label="End date for overview"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('overview')">Reset</button></div></div>
         <div class="stats-grid">
           <article class="stat" *ngIf="canSeeFinancials"><span>Sales recorded</span><strong>{{ totalSales | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Payments received</span><strong>{{ totalPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Average daily sales</span><strong>{{ averageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Estimated profit after all expenses</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and allocated fixed expenses · {{ selectedPeriodDescription('overview') }}</small></article>
-          <article class="stat"><span>Daily entries</span><strong>{{ entries.length }}</strong><small>Records visible to your role</small></article>
         </div>
 
         <div class="visual-grid" *ngIf="canSeeFinancials">
@@ -118,13 +120,13 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         <article class="visual-card overview-table-card" *ngIf="canSeeFinancials">
           <div class="visual-heading"><div><h4>Period performance</h4><p>{{ selectedPeriodDescription('overview') }}</p></div><button class="link-btn" (click)="activeTab='reports'; calculateReport()">Open reports</button></div>
           <div class="table-wrap">
-            <table><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th>Sales</th><th>Payments received</th><th>Difference</th></tr></thead>
+            <table><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th>Sales (₹)</th><th>Payments received (₹)</th><th>Difference (₹)</th></tr></thead>
               <tbody><tr *ngFor="let day of overviewPerformance">
                 <td>{{ day.entry_date | date:'d MMM yyyy' }}</td><td>{{ day.sold_large }}</td><td>{{ day.sold_small }}</td>
-                <td>{{ salesFor(day) | currency:'INR':'symbol':'1.0-0' }}</td>
-                <td>{{ (day.online_received + day.offline_received) | currency:'INR':'symbol':'1.0-0' }}</td>
-                <td><span [class.positive-value]="salesFor(day) - day.online_received - day.offline_received >= 0" [class.negative-value]="salesFor(day) - day.online_received - day.offline_received < 0">{{ salesFor(day) - day.online_received - day.offline_received | currency:'INR':'symbol':'1.0-0' }}</span></td>
-              </tr></tbody><tfoot><tr><th>Period total</th><th>{{ overviewTotals.largeSold }}</th><th>{{ overviewTotals.smallSold }}</th><th>{{ overviewTotals.sales | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ overviewTotals.payments | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ overviewTotals.difference | currency:'INR':'symbol':'1.0-0' }}</th></tr></tfoot>
+                <td>{{ salesFor(day) | number:'1.0-0' }}</td>
+                <td>{{ (day.online_received + day.offline_received) | number:'1.0-0' }}</td>
+                <td><span [class.positive-value]="salesFor(day) - day.online_received - day.offline_received > 0" [class.negative-value]="salesFor(day) - day.online_received - day.offline_received < 0">{{ salesFor(day) - day.online_received - day.offline_received | number:'1.0-0' }}</span></td>
+              </tr></tbody><tfoot><tr><th>Period total</th><th>{{ overviewTotals.largeSold }}</th><th>{{ overviewTotals.smallSold }}</th><th>{{ overviewTotals.sales | number:'1.0-0' }}</th><th>{{ overviewTotals.payments | number:'1.0-0' }}</th><th>{{ overviewTotals.difference | number:'1.0-0' }}</th></tr></tfoot>
             </table>
           </div>
         </article>
@@ -136,7 +138,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       <section *ngIf="activeTab==='daily'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">DAILY OPERATIONS</div><h3>{{ editingEntryId ? (role === 'staff' ? 'View daily record' : 'Edit daily record') : 'New daily record' }}</h3><p class="muted small">{{ editingEntryId ? 'This is the shared record for the selected date.' : 'No record exists for this date yet.' }}</p></div><span class="muted small">All amounts in ₹</span></div>
         <form (ngSubmit)="saveEntry()" class="entry-form">
-          <label>Date<input type="date" name="entry_date" [(ngModel)]="form.entry_date" (ngModelChange)="onDailyDateChange()" required [readonly]="false"></label>
+          <label>Date<input type="date" name="entry_date" [(ngModel)]="form.entry_date" (ngModelChange)="onDailyDateChange()" [max]="latestAllowedEntryDate" required [readonly]="false"></label>
           <div class="form-section-title">Stock movement (units)</div>
           <label>Opening stock — Large<input type="number" min="0" name="opening_large" [(ngModel)]="form.opening_large" required [readonly]="autoOpening || (isExistingRecord && !isFirstOpeningRecord)"></label>
           <label>Opening stock — Small<input type="number" min="0" name="opening_small" [(ngModel)]="form.opening_small" required [readonly]="autoOpening || (isExistingRecord && !isFirstOpeningRecord)"></label>
@@ -161,7 +163,6 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
           <label *ngIf="canSeeFinancials">Staff takes paid today<input type="number" min="0" step="0.01" name="staff_paid_today" [(ngModel)]="form.staff_paid_today" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label class="full-span">Notes (optional)<textarea rows="2" name="notes" [(ngModel)]="form.notes" placeholder="Any explanation or reminder…" [readonly]="isExistingRecord && role === 'staff'"></textarea></label>
           <div class="form-actions full-span">
-            <button type="button" class="btn btn-secondary" (click)="startNewEntry()">Open today's record</button>
             <button *ngIf="!(isExistingRecord && role === 'staff')" class="btn btn-primary" [disabled]="busy">{{ busy ? 'Saving…' : (editingEntryId ? 'Update shared record' : 'Create daily record') }}</button>
             <span *ngIf="isExistingRecord && role === 'staff'" class="muted small">Staff can view this shared record but cannot edit an existing record. Ask the manager or admin to make corrections.</span>
           </div>
@@ -180,7 +181,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       </section>
 
       <section *ngIf="activeTab==='reports'" class="panel">
-        <div class="section-heading"><div><div class="eyebrow">BUSINESS PERFORMANCE</div><h3>Reports</h3></div><div class="period-controls"><label>Show<select [(ngModel)]="reportPreset" (ngModelChange)="onReportPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="reportPreset==='custom'"><label>From<input type="date" [(ngModel)]="reportStart" (ngModelChange)="onReportDateChange()" aria-label="Start date for report"></label><label>To<input type="date" [(ngModel)]="reportEnd" (ngModelChange)="onReportDateChange()" aria-label="End date for report"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('report')">Reset</button></div></div>
+        <div class="section-heading"><div><div class="eyebrow">BUSINESS PERFORMANCE</div><h3>Reports <span class="heading-date-range">({{ selectedPeriodDescription('report') }})</span></h3></div><div class="period-controls"><label>Show<select [(ngModel)]="reportPreset" (ngModelChange)="onReportPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="reportPreset==='custom'"><label>From<input type="date" [(ngModel)]="reportStart" (ngModelChange)="onReportDateChange()" aria-label="Start date for report"></label><label>To<input type="date" [(ngModel)]="reportEnd" (ngModelChange)="onReportDateChange()" aria-label="End date for report"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('report')">Reset</button></div></div>
         <div class="stats-grid">
           <article class="stat"><span>Total sales</span><strong>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Stock purchases paid</span><strong>{{ report.stock | currency:'INR':'symbol':'1.0-0' }}</strong></article>
@@ -233,14 +234,14 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         <article class="visual-card report-table-card">
           <div class="visual-heading"><div><h4>Period report table</h4><p>Sales, collections, and estimated profit after fixed expenses for each period</p></div></div>
           <div class="table-wrap" *ngIf="reportDailySeries.length; else noReportTable">
-            <table><thead><tr><th>Period</th><th>Large sales</th><th>Small sales</th><th>Total sales</th><th>Payments received</th><th>Stock purchased cost</th><th>Staff share</th><th>Cost gap</th><th>Misc. expenses</th><th>Estimated profit after fixed expenses</th></tr></thead>
+            <table><thead><tr><th>Period</th><th>Large sales (₹)</th><th>Small sales (₹)</th><th>Total sales (₹)</th><th>Payments received (₹)</th><th>Stock purchased cost (₹)</th><th>Staff share (₹)</th><th>Cost gap (₹)</th><th>Misc. expenses (₹)</th><th>Estimated profit after fixed expenses (₹)</th></tr></thead>
               <tbody><tr *ngFor="let day of reportTableRows">
-                <td>{{ day.label }}</td><td>{{ day.largeSales | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.smallSales | currency:'INR':'symbol':'1.0-0' }}</td>
-                <td><strong>{{ day.sales | currency:'INR':'symbol':'1.0-0' }}</strong></td><td>{{ day.payments | currency:'INR':'symbol':'1.0-0' }}</td>
-                <td>{{ day.stock | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.staffShare | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.costGap | currency:'INR':'symbol':'1.0-0' }}</td><td>{{ day.miscCosts | currency:'INR':'symbol':'1.0-0' }}</td>
-                <td><span [class.positive-value]="day.net >= 0" [class.negative-value]="day.net < 0">{{ day.net | currency:'INR':'symbol':'1.0-0' }}</span></td>
+                <td>{{ day.label }}</td><td>{{ day.largeSales | number:'1.0-0' }}</td><td>{{ day.smallSales | number:'1.0-0' }}</td>
+                <td>{{ day.sales | number:'1.0-0' }}</td><td>{{ day.payments | number:'1.0-0' }}</td>
+                <td>{{ day.stock | number:'1.0-0' }}</td><td>{{ day.staffShare | number:'1.0-0' }}</td><td>{{ day.costGap | number:'1.0-0' }}</td><td>{{ day.miscCosts | number:'1.0-0' }}</td>
+                <td><span [class.positive-value]="day.net >= 0" [class.negative-value]="day.net < 0">{{ day.net | number:'1.0-0' }}</span></td>
               </tr></tbody>
-              <tfoot><tr><th>Period total</th><th>{{ reportLargeSalesTotal | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ reportSmallSalesTotal | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.stock | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.gap | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.misc | currency:'INR':'symbol':'1.0-0' }}</th><th>{{ report.sales - report.stock - report.staff - report.gap - report.misc | currency:'INR':'symbol':'1.0-0' }}</th></tr></tfoot>
+              <tfoot><tr><th>Period total</th><th>{{ reportLargeSalesTotal | number:'1.0-0' }}</th><th>{{ reportSmallSalesTotal | number:'1.0-0' }}</th><th>{{ report.sales | number:'1.0-0' }}</th><th>{{ reportPayments | number:'1.0-0' }}</th><th>{{ report.stock | number:'1.0-0' }}</th><th>{{ report.staff | number:'1.0-0' }}</th><th>{{ report.gap | number:'1.0-0' }}</th><th>{{ report.misc | number:'1.0-0' }}</th><th>{{ reportProfit | number:'1.0-0' }}</th></tr></tfoot>
             </table>
           </div>
           <ng-template #noReportTable><div class="empty-state compact">No records found for the selected period.</div></ng-template>
@@ -313,6 +314,7 @@ export class AppComponent implements OnInit {
   role: Role = 'staff';
   activeTab = 'overview';
   busy = false;
+  isDarkMode = false;
   message = '';
   error = '';
   loginEmail = '';
@@ -368,7 +370,15 @@ export class AppComponent implements OnInit {
     }
   }
 
+  toggleTheme(): void {
+    this.isDarkMode = !this.isDarkMode;
+    if (typeof document !== 'undefined') document.documentElement.classList.toggle('dark-mode', this.isDarkMode);
+    if (typeof localStorage !== 'undefined') localStorage.setItem('icy-popps-theme', this.isDarkMode ? 'dark' : 'light');
+  }
+
   async ngOnInit(): Promise<void> {
+    if (typeof localStorage !== 'undefined') this.isDarkMode = localStorage.getItem('icy-popps-theme') === 'dark';
+    if (typeof document !== 'undefined') document.documentElement.classList.toggle('dark-mode', this.isDarkMode);
     if (!this.supabase) {
       this.error = 'Supabase is not configured yet. Follow the SETUP.md file, then restart the app.';
       return;
@@ -413,8 +423,8 @@ export class AppComponent implements OnInit {
     else if(preset==='last7'){start.setDate(start.getDate()-6);}
     else if(preset==='currentMonth'){start=new Date(today.getFullYear(),today.getMonth(),1,12);end=new Date(today);end.setDate(today.getDate()-1);}
     else if(preset==='lastMonth'){start=new Date(today.getFullYear(),today.getMonth()-1,1,12);end=new Date(today.getFullYear(),today.getMonth(),0,12);}
-    else if(preset==='last3Months'){start=new Date(today.getFullYear(),today.getMonth()-2,1,12);}
-    else if(preset==='last6Months'){start=new Date(today.getFullYear(),today.getMonth()-5,1,12);}
+    else if(preset==='last3Months'){start=new Date(today.getFullYear(),today.getMonth()-3,1,12);end=new Date(today.getFullYear(),today.getMonth(),0,12);}
+    else if(preset==='last6Months'){start=new Date(today.getFullYear(),today.getMonth()-6,1,12);end=new Date(today.getFullYear(),today.getMonth(),0,12);}
     else if(preset==='currentYear'){start=new Date(today.getFullYear(),0,1,12);}
     else if(preset==='lastYear'){start=new Date(today.getFullYear()-1,0,1,12);end=new Date(today.getFullYear()-1,11,31,12);}
     else if(preset==='custom'){ const a=customStart||customEnd||fmt(today), b=customEnd||customStart||fmt(today); return {start:a<=b?a:b,end:a<=b?b:a}; }
@@ -424,7 +434,7 @@ export class AppComponent implements OnInit {
   displayDate(value: string): string {
     if (!value) return '';
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-    return match ? `${match[3]}-${match[2]}-${match[1]}` : value;
+    return match ? `${Number(match[3])} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(match[2])-1]} ${match[1]}` : value;
   }
   resetPeriod(which: 'overview' | 'report'): void {
     const today = new Date();
@@ -440,7 +450,7 @@ export class AppComponent implements OnInit {
     }
   }
   periodDescription(period: 'daily' | 'weekly' | 'monthly' | 'yearly', dateText: string): string { const r=this.rangeFor(period,dateText); return r.start===r.end?r.start:`${r.start} to ${r.end}`; }
-  selectedPeriodDescription(which:'overview'|'report'): string { const isOverview=which==='overview'; const r=this.selectedRange(isOverview?this.overviewPreset:this.reportPreset,isOverview?this.overviewDate:this.reportDate,isOverview?this.overviewStart:this.reportStart,isOverview?this.overviewEnd:this.reportEnd); return `${this.displayDate(r.start)} to ${this.displayDate(r.end)}`; }
+  selectedPeriodDescription(which:'overview'|'report'): string { const isOverview=which==='overview'; const r=this.selectedRange(isOverview?this.overviewPreset:this.reportPreset,isOverview?this.overviewDate:this.reportDate,isOverview?this.overviewStart:this.reportStart,isOverview?this.overviewEnd:this.reportEnd); return `${this.displayDate(r.start)} - ${this.displayDate(r.end)}`; }
   private entriesForSelection(which:'overview'|'report'): Entry[] {
     const isOverview=which==='overview'; const preset=isOverview?this.overviewPreset:this.reportPreset;
     const date=isOverview?this.overviewDate:this.reportDate; const start=isOverview?this.overviewStart:this.reportStart; const end=isOverview?this.overviewEnd:this.reportEnd;
@@ -535,7 +545,29 @@ export class AppComponent implements OnInit {
     if (aggregateMonthly) { const cursor=new Date(range.start+'T12:00:00'); const last=new Date(range.end+'T12:00:00'); cursor.setDate(1); while(cursor<=last){const key=`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;if(!map.has(key))map.set(key,{entry_date:key,label:cursor.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}),largeSales:0,smallSales:0,sales:0,payments:0,stock:0,staffShare:0,costGap:0,miscCosts:0,otherCosts:0,net:0});cursor.setMonth(cursor.getMonth()+1);} }
     return [...map.values()].sort((a,b)=>a.entry_date.localeCompare(b.entry_date));
   }
-  get reportTableRows(): Array<{entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;stock:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;net:number}> { return this.reportDailySeries.slice().reverse().map(day => { const date = day.entry_date.length === 7 ? `${day.entry_date}-01` : day.entry_date; const d = new Date(date + 'T12:00:00'); const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); const fixedShare = day.entry_date.length === 7 ? this.fixedMonthly : this.fixedMonthly / daysInMonth; return { ...day, net: day.net - fixedShare }; }); }
+  get reportTableRows(): Array<{entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;stock:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;net:number}> {
+    const range = this.selectedRange(this.reportPreset, this.reportDate, this.reportStart, this.reportEnd);
+    return this.reportDailySeries.slice().reverse().map(day => {
+      // Monthly buckets may cover only part of a month (for example, a custom range).
+      // Allocate fixed costs only to the days included in the selected report range.
+      const monthBucket = day.entry_date.length === 7;
+      const monthStart = monthBucket ? `${day.entry_date}-01` : day.entry_date;
+      const monthDate = new Date(monthStart + 'T12:00:00');
+      const bucketStart = monthBucket ? new Date(monthDate.getFullYear(), monthDate.getMonth(), 1, 12) : new Date(monthDate);
+      const bucketEnd = monthBucket ? new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 12) : new Date(monthDate);
+      const selectedStart = new Date(range.start + 'T12:00:00');
+      const selectedEnd = new Date(range.end + 'T12:00:00');
+      const cursor = new Date(Math.max(bucketStart.getTime(), selectedStart.getTime()));
+      const clippedEnd = new Date(Math.min(bucketEnd.getTime(), selectedEnd.getTime()));
+      let fixedShare = 0;
+      while (cursor <= clippedEnd) {
+        const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+        fixedShare += this.fixedMonthly / daysInMonth;
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      return { ...day, net: day.net - fixedShare };
+    });
+  }
   get reportLargeSalesTotal(): number { return this.reportDailySeries.reduce((sum,day)=>sum+day.largeSales,0); }
   get reportSmallSalesTotal(): number { return this.reportDailySeries.reduce((sum,day)=>sum+day.smallSales,0); }
   get reportOnlinePayments(): number { return this.entriesForSelection('report').reduce((sum, entry) => sum + Number(entry.online_received || 0), 0); }
@@ -553,8 +585,13 @@ export class AppComponent implements OnInit {
   chartPointX(index:number,count:number):number { return count<=1?358.5:92+(index*533/(count-1)); }
   chartPointY(value:number,max:number):number { return 185-(Math.max(0,value)/Math.max(1,max))*150; }
   chartLinePoints(key:'sales'|'payments'):string { return this.reportDailySeries.map((day,index)=>`${this.chartPointX(index,this.reportDailySeries.length)},${this.chartPointY(day[key],this.reportChartMax)}`).join(' '); }
+  get latestAllowedEntryDate(): string {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
   private emptyEntry(): Entry {
-    return { entry_date: new Date().toISOString().slice(0, 10), opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, sold_large: 0, sold_small: 0, online_received: 0, offline_received: 0, cost_gap: 0, miscellaneous_expenses: 0, stock_purchase_paid: 0, staff_paid_today: 0, notes: '' };
+    return { entry_date: this.latestAllowedEntryDate, opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, sold_large: 0, sold_small: 0, online_received: 0, offline_received: 0, cost_gap: 0, miscellaneous_expenses: 0, stock_purchase_paid: 0, staff_paid_today: 0, notes: '' };
   }
   private clearAlerts(): void { this.message = ''; this.error = ''; }
   private requireClient(): SupabaseClient {
@@ -652,6 +689,10 @@ export class AppComponent implements OnInit {
 
   async onDailyDateChange(): Promise<void> {
     if (!this.form.entry_date) return;
+    if (this.form.entry_date > this.latestAllowedEntryDate) {
+      this.form.entry_date = this.latestAllowedEntryDate;
+      this.error = 'Daily entries are allowed only for past dates, up to yesterday. Today and future dates are not allowed.';
+    }
     await this.loadEntryForDate(this.form.entry_date);
   }
 
@@ -719,6 +760,9 @@ export class AppComponent implements OnInit {
     this.busy = true;
     try {
       const client = this.requireClient();
+      if (!this.form.entry_date || this.form.entry_date > this.latestAllowedEntryDate) {
+        throw new Error('Daily entries are allowed only for past dates, up to yesterday. Today and future dates are not allowed.');
+      }
       if (this.isExistingRecord && this.role === 'staff') {
         throw new Error('Staff can view an existing shared record but cannot edit it. Ask the manager or admin to make corrections.');
       }
