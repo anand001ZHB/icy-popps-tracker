@@ -371,3 +371,9 @@ html.dark-mode .positive-value { color: #4ade80; }
 html.dark-mode .negative-value { color: #fb923c; }
 html.dark-mode .vendor-code-chip { color: #e5e7eb; }
 html.dark-mode .heading-date-range { color: #9ca3af; }
+
+
+/* Make the daily-entry date restriction obvious on both desktop and mobile. */
+.entry-date-field { align-content: start; }
+.date-limit-hint { display: block; line-height: 1.4; margin-top: 5px; }
+.entry-date-field input[type="date"] { max-width: 100%; min-width: 0; }

@@ -138,7 +138,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       <section *ngIf="activeTab==='daily'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">DAILY OPERATIONS</div><h3>{{ editingEntryId ? (role === 'staff' ? 'View daily record' : 'Edit daily record') : 'New daily record' }}</h3><p class="muted small">{{ editingEntryId ? 'This is the shared record for the selected date.' : 'No record exists for this date yet.' }}</p></div><span class="muted small">All amounts in ₹</span></div>
         <form (ngSubmit)="saveEntry()" class="entry-form">
-          <label>Date<input type="date" name="entry_date" [(ngModel)]="form.entry_date" (ngModelChange)="onDailyDateChange()" [max]="latestAllowedEntryDate" required [readonly]="false"></label>
+          <label class="entry-date-field">Date<input type="date" name="entry_date" [(ngModel)]="form.entry_date" (ngModelChange)="onDailyDateChange()" [attr.max]="latestAllowedEntryDate" required aria-describedby="entry-date-limit"><span id="entry-date-limit" class="muted small date-limit-hint">You can create entries only up to yesterday ({{ latestAllowedEntryDate | date:'d MMM yyyy' }}). Today and future dates are not allowed.</span></label>
           <div class="form-section-title">Stock movement (units)</div>
           <label>Opening stock — Large<input type="number" min="0" name="opening_large" [(ngModel)]="form.opening_large" required [readonly]="autoOpening || (isExistingRecord && !isFirstOpeningRecord)"></label>
           <label>Opening stock — Small<input type="number" min="0" name="opening_small" [(ngModel)]="form.opening_small" required [readonly]="autoOpening || (isExistingRecord && !isFirstOpeningRecord)"></label>
@@ -689,11 +689,16 @@ export class AppComponent implements OnInit {
 
   async onDailyDateChange(): Promise<void> {
     if (!this.form.entry_date) return;
+    let rejectedDate = false;
     if (this.form.entry_date > this.latestAllowedEntryDate) {
       this.form.entry_date = this.latestAllowedEntryDate;
-      this.error = 'Daily entries are allowed only for past dates, up to yesterday. Today and future dates are not allowed.';
+      rejectedDate = true;
     }
     await this.loadEntryForDate(this.form.entry_date);
+    // loadEntryForDate clears old alerts, so show this validation after it finishes.
+    if (rejectedDate) {
+      this.error = 'Daily entries are allowed only for past dates, up to yesterday. Today and future dates are not allowed.';
+    }
   }
 
   private async loadEntryForDate(date: string): Promise<void> {
