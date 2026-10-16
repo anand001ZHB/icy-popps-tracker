@@ -82,8 +82,8 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         <button [class.active]="activeTab==='settings'" *ngIf="isAdmin" (click)="activeTab='settings'; loadSettings(); loadFixedCosts()">Settings</button>
       </nav>
 
-      <p class="notice" *ngIf="message && !(activeTab === 'daily' && isInvalidEntryDate)"><span class="alert-icon" aria-hidden="true">ℹ️</span> {{ message }}</p>
-      <p class="error" *ngIf="error"><span class="alert-icon" aria-hidden="true">⚠️</span> {{ error }}</p>
+      <p class="notice" *ngIf="message && activeTab === 'daily' && !isInvalidEntryDate"><span class="alert-icon" aria-hidden="true">ℹ️</span> {{ message }}</p>
+      <p class="error" *ngIf="error && activeTab === 'daily'"><span class="alert-icon" aria-hidden="true">⚠️</span> {{ error }}</p>
 
       <section *ngIf="activeTab==='overview'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">AT A GLANCE</div><h3>Business overview <span class="heading-date-range">({{ selectedPeriodDescription('overview') }})</span></h3></div><div class="period-controls"><label>Show<select [(ngModel)]="overviewPreset" (ngModelChange)="onOverviewPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="overviewPreset==='custom'"><label>From<input type="date" [(ngModel)]="overviewStart" (ngModelChange)="onOverviewDateChange()" aria-label="Start date for overview"></label><label>To<input type="date" [(ngModel)]="overviewEnd" (ngModelChange)="onOverviewDateChange()" aria-label="End date for overview"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('overview')">Reset</button></div></div>
@@ -741,7 +741,9 @@ export class AppComponent implements OnInit {
       this.originalUpdatedAt = null;
       this.form = { ...this.emptyEntry(), entry_date: date };
       await this.suggestOpeningStock();
-      this.message = `No record exists for ${date}. You can create the day's shared record.`;
+      // Show the no-record info only for eligible past dates, and only on Daily Hisab.
+      // Today and future dates are restricted and should show only the date-limit warning.
+      this.message = date < this.todayEntryDate ? `No record exists for ${date}. You can create the day's shared record.` : '';
     } catch (e) {
       this.error = this.errMsg(e);
     }
