@@ -119,8 +119,12 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         </div>
         <article class="visual-card overview-table-card" *ngIf="canSeeFinancials">
           <div class="visual-heading"><div><h4>Period performance</h4><p>{{ selectedPeriodDescription('overview') }}</p></div><button class="link-btn" (click)="activeTab='reports'; calculateReport()">Open reports</button></div>
+          <div class="table-export-toolbar" aria-label="Export period performance table">
+            <button type="button" class="table-export-btn" title="Download Excel file" aria-label="Download Excel file" (click)="downloadTableExcel('overviewTable', 'icy-popps-overview')"><span aria-hidden="true">▦</span><span>Excel</span></button>
+            <button type="button" class="table-export-btn" title="Download PDF" aria-label="Download PDF" (click)="downloadTablePdf('overviewTable', 'Icy Popps - Overview')"><span aria-hidden="true">▤</span><span>PDF</span></button>
+          </div>
           <div class="table-wrap">
-            <table><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th>Sales (₹)</th><th>Payments received (₹)</th><th>Difference (₹)</th></tr></thead>
+            <table id="overviewTable"><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th>Sales (₹)</th><th>Payments received (₹)</th><th>Difference (₹)</th></tr></thead>
               <tbody><tr *ngFor="let day of overviewPerformance">
                 <td>{{ day.entry_date | date:'d MMM yyyy' }}</td><td>{{ day.sold_large }}</td><td>{{ day.sold_small }}</td>
                 <td>{{ salesFor(day) | number:'1.0-0' }}</td>
@@ -173,8 +177,12 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
 
       <section *ngIf="activeTab==='history'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">RECORDS</div><h3>Daily entry history</h3></div></div>
+        <div class="table-export-toolbar" *ngIf="entries.length" aria-label="Export daily entry history table">
+          <button type="button" class="table-export-btn" title="Download Excel file" aria-label="Download Excel file" (click)="downloadTableExcel('historyTable', 'icy-popps-entry-history')"><span aria-hidden="true">▦</span><span>Excel</span></button>
+          <button type="button" class="table-export-btn" title="Download PDF" aria-label="Download PDF" (click)="downloadTablePdf('historyTable', 'Icy Popps - Entry History')"><span aria-hidden="true">▤</span><span>PDF</span></button>
+        </div>
         <div class="table-wrap" *ngIf="entries.length; else noEntries">
-          <table><thead><tr><th>Date</th><th>Opening stock L/S</th><th>Closing stock L/S</th><th>Large sold</th><th>Small sold</th><th *ngIf="canSeeFinancials">Sales (₹)</th><th *ngIf="canSeeFinancials">Online / Offline (₹)</th><th *ngIf="canSeeFinancials">Payment received (₹)</th><th *ngIf="canSeeFinancials">Cost gap (₹)</th><th *ngIf="canSeeFinancials">Misc. expenses (₹)</th><th *ngIf="canSeeFinancials">Staff took (₹)</th><th *ngIf="canSeeFinancials">Staff share (₹)</th><th>Notes</th><th>Actions</th></tr></thead>
+          <table id="historyTable"><thead><tr><th>Date</th><th>Opening stock L/S</th><th>Closing stock L/S</th><th>Large sold</th><th>Small sold</th><th *ngIf="canSeeFinancials">Sales (₹)</th><th *ngIf="canSeeFinancials">Online / Offline (₹)</th><th *ngIf="canSeeFinancials">Payment received (₹)</th><th *ngIf="canSeeFinancials">Cost gap (₹)</th><th *ngIf="canSeeFinancials">Misc. expenses (₹)</th><th *ngIf="canSeeFinancials">Staff took (₹)</th><th *ngIf="canSeeFinancials">Staff share (₹)</th><th>Notes</th><th>Actions</th></tr></thead>
             <tbody><tr *ngFor="let e of entries"><td>{{ e.entry_date | date:'d MMM yyyy' }}</td><td>{{ e.opening_large }} / {{ e.opening_small }}</td><td>{{ e.closing_large }} / {{ e.closing_small }}</td><td>{{ e.sold_large }}</td><td>{{ e.sold_small }}</td><td *ngIf="canSeeFinancials">{{ salesFor(e) | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.online_received | number:'1.0-0' }} / {{ e.offline_received | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ (e.online_received + e.offline_received) | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.cost_gap | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.miscellaneous_expenses | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.staff_paid_today | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.staff_share | number:'1.0-0' }}</td><td class="notes-cell">{{ e.notes || '—' }}</td><td><button class="link-btn" (click)="editEntry(e)">{{ canEditEntry(e) ? 'Open / edit' : 'Open' }}</button><button *ngIf="canEditEntry(e)" class="link-btn danger-link" [disabled]="busy" (click)="deleteEntry(e)">Delete</button></td></tr></tbody>
             <tfoot><tr><th>Totals</th><th></th><th></th><th>{{ historyTotals.largeSold }}</th><th>{{ historyTotals.smallSold }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.sales | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.onlineReceived | number:'1.0-0' }} / {{ historyTotals.offlineReceived | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.payments | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.costGap | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.miscellaneousExpenses | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffTook | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffShare | number:'1.0-0' }}</th><th></th><th>{{ entries.length }} records</th></tr></tfoot>
           </table>
@@ -235,8 +243,12 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         </div>
         <article class="visual-card report-table-card">
           <div class="visual-heading"><div><h4>Period report table</h4><p>Sales, collections, and estimated profit after fixed expenses for each period</p></div></div>
+          <div class="table-export-toolbar" *ngIf="reportDailySeries.length" aria-label="Export period report table">
+            <button type="button" class="table-export-btn" title="Download Excel file" aria-label="Download Excel file" (click)="downloadTableExcel('reportTable', 'icy-popps-reports')"><span aria-hidden="true">▦</span><span>Excel</span></button>
+            <button type="button" class="table-export-btn" title="Download PDF" aria-label="Download PDF" (click)="downloadTablePdf('reportTable', 'Icy Popps - Reports')"><span aria-hidden="true">▤</span><span>PDF</span></button>
+          </div>
           <div class="table-wrap" *ngIf="reportDailySeries.length; else noReportTable">
-            <table><thead><tr><th>Period</th><th>Large sales (₹)</th><th>Small sales (₹)</th><th>Total sales (₹)</th><th>Payments received (₹)</th><th>Stock purchased cost (₹)</th><th>Staff share (₹)</th><th>Cost gap (₹)</th><th>Misc. expenses (₹)</th><th>Estimated profit after fixed expenses (₹)</th></tr></thead>
+            <table id="reportTable"><thead><tr><th>Period</th><th>Large sales (₹)</th><th>Small sales (₹)</th><th>Total sales (₹)</th><th>Payments received (₹)</th><th>Stock purchased cost (₹)</th><th>Staff share (₹)</th><th>Cost gap (₹)</th><th>Misc. expenses (₹)</th><th>Estimated profit after fixed expenses (₹)</th></tr></thead>
               <tbody><tr *ngFor="let day of reportTableRows">
                 <td>{{ day.label }}</td><td>{{ day.largeSales | number:'1.0-0' }}</td><td>{{ day.smallSales | number:'1.0-0' }}</td>
                 <td>{{ day.sales | number:'1.0-0' }}</td><td>{{ day.payments | number:'1.0-0' }}</td>
@@ -1068,6 +1080,144 @@ export class AppComponent implements OnInit {
       await this.loadUsers();
     } catch (e) { this.error = this.errMsg(e); }
     finally { this.busy = false; }
+  }
+
+  downloadTableExcel(tableId: string, filename: string): void {
+    const table = document.getElementById(tableId) as HTMLTableElement | null;
+    if (!table) { this.error = 'The table is not available to download. Please try again.'; return; }
+
+    // Create a genuine .xlsx workbook (Office Open XML), without adding a runtime dependency.
+    // Numeric/cost columns are exported as numeric cells with a right-aligned cell style.
+    const rawRows = Array.from(table.rows).map((row) => Array.from(row.cells).map((cell) => ({
+      text: (cell.textContent || '').replace(/\s+/g, ' ').trim(),
+      header: cell.tagName.toLowerCase() === 'th'
+    })));
+    // The Entry history Actions column is for in-app controls only and must never be exported.
+    const actionColumnIndex = tableId === 'historyTable'
+      ? (rawRows.find((row) => row.some((cell) => cell.header)) || []).findIndex((cell) => /^(actions?)$/i.test(cell.text))
+      : -1;
+    const rows = actionColumnIndex >= 0
+      ? rawRows.map((row) => row.filter((_cell, index) => index !== actionColumnIndex))
+      : rawRows;
+    if (!rows.length) { this.error = 'There is no table data to download.'; return; }
+    const headerRow = rows.find((row) => row.some((cell) => cell.header)) || rows[0];
+    const numericColumn = (index: number): boolean => {
+      const label = (headerRow[index]?.text || '').toLowerCase();
+      return /\b(sold|sales|stock|cost|price|payment|received|difference|profit|expense|expenses|staff share|staff took|opening|closing|large|small|amount|total)\b|₹|\(rs\.?\)/i.test(label);
+    };
+    const xmlEscape = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&apos;');
+    const columnName = (number: number): string => {
+      let n = number + 1, name = '';
+      while (n > 0) { const rem = (n - 1) % 26; name = String.fromCharCode(65 + rem) + name; n = Math.floor((n - 1) / 26); }
+      return name;
+    };
+    const worksheetRows = rows.map((row, r) => `<row r="${r + 1}">${row.map((cell, c) => {
+      const ref = `${columnName(c)}${r + 1}`;
+      if (r > 0 && numericColumn(c)) {
+        const cleaned = cell.text.replace(/[₹$,\s]/g, '').replace(/,/g, '');
+        const numeric = cleaned !== '' && /^-?\d+(?:\.\d+)?$/.test(cleaned) ? Number(cleaned) : NaN;
+        if (Number.isFinite(numeric)) return `<c r="${ref}" s="2"><v>${numeric}</v></c>`;
+      }
+      const style = cell.header ? '1' : '0';
+      return `<c r="${ref}" t="inlineStr" s="${style}"><is><t xml:space="preserve">${xmlEscape(cell.text)}</t></is></c>`;
+    }).join('')}</row>`).join('');
+    const maxCol = Math.max(...rows.map((row) => row.length));
+    const lastCell = `${columnName(Math.max(0, maxCol - 1))}${rows.length}`;
+    const files: Array<{ name: string; content: string }> = [
+      { name: '[Content_Types].xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>' },
+      { name: '_rels/.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name: 'xl/workbook.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Icy Popps" sheetId="1" r:id="rId1"/></sheets></workbook>' },
+      { name: 'xl/_rels/workbook.xml.rels', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name: 'xl/styles.xml', content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' },
+      { name: 'xl/worksheets/sheet1.xml', content: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:${lastCell}"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><sheetData>${worksheetRows}</sheetData><autoFilter ref="A1:${lastCell}"/></worksheet>` }
+    ];
+    const blob = new Blob([this.makeStoredZip(files)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url; link.download = `${filename}.xlsx`; link.style.display = 'none';
+    document.body.appendChild(link); link.click(); link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  private makeStoredZip(files: Array<{ name: string; content: string }>): Uint8Array {
+    const encoder = new TextEncoder();
+    const localParts: Uint8Array[] = [];
+    const centralParts: Uint8Array[] = [];
+    let offset = 0;
+    const u16 = (view: DataView, at: number, value: number) => view.setUint16(at, value, true);
+    const u32 = (view: DataView, at: number, value: number) => view.setUint32(at, value >>> 0, true);
+    const crc32 = (bytes: Uint8Array): number => {
+      let crc = 0xffffffff;
+      for (const byte of bytes) { crc ^= byte; for (let k = 0; k < 8; k++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0); }
+      return (crc ^ 0xffffffff) >>> 0;
+    };
+    for (const file of files) {
+      const name = encoder.encode(file.name), data = encoder.encode(file.content), crc = crc32(data);
+      const local = new Uint8Array(30 + name.length), lv = new DataView(local.buffer);
+      u32(lv, 0, 0x04034b50); u16(lv, 4, 20); u16(lv, 6, 0x0800); u16(lv, 8, 0);
+      u16(lv, 10, 0); u16(lv, 12, 0); u32(lv, 14, crc); u32(lv, 18, data.length); u32(lv, 22, data.length);
+      u16(lv, 26, name.length); u16(lv, 28, 0); local.set(name, 30);
+      localParts.push(local, data);
+      const central = new Uint8Array(46 + name.length), cv = new DataView(central.buffer);
+      u32(cv, 0, 0x02014b50); u16(cv, 4, 20); u16(cv, 6, 20); u16(cv, 8, 0x0800); u16(cv, 10, 0);
+      u16(cv, 12, 0); u16(cv, 14, 0); u32(cv, 16, crc); u32(cv, 20, data.length); u32(cv, 24, data.length);
+      u16(cv, 28, name.length); u16(cv, 30, 0); u16(cv, 32, 0); u16(cv, 34, 0); u16(cv, 36, 0); u32(cv, 38, 0); u32(cv, 42, offset); central.set(name, 46);
+      centralParts.push(central); offset += local.length + data.length;
+    }
+    const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
+    const end = new Uint8Array(22), ev = new DataView(end.buffer);
+    u32(ev, 0, 0x06054b50); u16(ev, 4, 0); u16(ev, 6, 0); u16(ev, 8, files.length); u16(ev, 10, files.length);
+    u32(ev, 12, centralSize); u32(ev, 16, offset); u16(ev, 20, 0);
+    const total = offset + centralSize + end.length, result = new Uint8Array(total);
+    let cursor = 0;
+    for (const part of localParts) { result.set(part, cursor); cursor += part.length; }
+    for (const part of centralParts) { result.set(part, cursor); cursor += part.length; }
+    result.set(end, cursor);
+    return result;
+  }
+
+  downloadTablePdf(tableId: string, title: string): void {
+    const table = document.getElementById(tableId) as HTMLTableElement | null;
+    if (!table) { this.error = 'The table is not available to download. Please try again.'; return; }
+    const printWindow = window.open('', '_blank', 'width=1000,height=750');
+    if (!printWindow) {
+      this.error = 'Your browser blocked the PDF print window. Please allow pop-ups for this app and try again.';
+      return;
+    }
+    const safeTitle = title.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch] || ch));
+    // Clone the table and align numeric/cost columns by their header text for PDF/print output.
+    const printableTable = table.cloneNode(true) as HTMLTableElement;
+    // Keep row action controls out of downloaded PDFs; they are useful only inside the app.
+    if (tableId === 'historyTable') {
+      const headerRow = printableTable.querySelector('thead tr') as HTMLTableRowElement | null;
+      const actionIndex = headerRow
+        ? Array.from(headerRow.cells).findIndex((cell: HTMLTableCellElement) => /^(actions?)$/i.test((cell.textContent || '').trim()))
+        : -1;
+      if (actionIndex >= 0) {
+        Array.from(printableTable.rows).forEach((row) => {
+          if (row.cells.length > actionIndex) row.deleteCell(actionIndex);
+        });
+      }
+    }
+    const headerCells = Array.from(printableTable.querySelectorAll('thead tr:first-child th'));
+    const numericHeader = /\b(sold|sales|stock|cost|price|payment|received|difference|profit|expense|expenses|staff share|staff took|opening|closing|large|small|amount|total|misc\.)\b|₹|\(rs\.?\)/i;
+    const rightAlignedColumns = new Set<number>();
+    headerCells.forEach((cell, index) => {
+      if (numericHeader.test((cell.textContent || '').trim())) rightAlignedColumns.add(index);
+    });
+    Array.from(printableTable.rows).forEach((row) => Array.from(row.cells).forEach((cell, index) => {
+      if (rightAlignedColumns.has(index)) cell.style.textAlign = 'right';
+      else cell.style.textAlign = 'left';
+      if (rightAlignedColumns.has(index)) cell.style.fontVariantNumeric = 'tabular-nums';
+    }));
+    printWindow.document.open();
+    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${safeTitle}</title><style>
+      @page { size: landscape; margin: 12mm; } body { font-family: Arial, sans-serif; color: #222; padding: 12px; }
+      h1 { font-size: 18px; margin: 0 0 6px; } p { color: #555; font-size: 10px; margin: 0 0 14px; }
+      table { border-collapse: collapse; width: 100%; font-size: 9px; } th, td { border: 1px solid #ccc; padding: 5px; vertical-align: top; }
+      th { background: #f3e5d0; font-weight: bold; } tfoot th { background: #eee; } tr { break-inside: avoid; }
+      </style></head><body><h1>${safeTitle}</h1><p>Generated on ${new Date().toLocaleString()}</p>${printableTable.outerHTML}<script>window.onload = function(){ window.focus(); window.print(); };<\/script></body></html>`);
+    printWindow.document.close();
   }
 
   async deleteVendor(v: {id:string;name:string;status?:string}): Promise<void> {

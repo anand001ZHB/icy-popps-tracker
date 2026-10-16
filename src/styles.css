@@ -377,3 +377,22 @@ html.dark-mode .heading-date-range { color: #9ca3af; }
 .entry-date-field { align-content: start; }
 .date-limit-hint { display: block; line-height: 1.4; margin-top: 5px; }
 .entry-date-field input[type="date"] { max-width: 100%; min-width: 0; }
+
+
+/* Table export actions: aligned to the far right above each exportable table. */
+.table-export-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin: 0 0 10px; width: 100%; }
+.table-export-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #f3c89f; border-radius: 9px; padding: 8px 12px; background: #fffaf4; color: #9a3412; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+.table-export-btn:hover { background: #ffedd5; border-color: #fb923c; }
+.table-export-btn span[aria-hidden="true"] { font-size: 17px; line-height: 1; }
+html.dark-mode .table-export-btn { background: #292524; border-color: #57534e; color: #fed7aa; }
+html.dark-mode .table-export-btn:hover { background: #3b2b1f; border-color: #9a3412; }
+@media (max-width: 600px) { .table-export-toolbar { margin-bottom: 8px; } .table-export-btn { padding: 7px 10px; } }
+
+
+/* Right-align numeric and money columns in all business tables (including headers and totals). */
+#overviewTable th:nth-child(n+2), #overviewTable td:nth-child(n+2),
+#historyTable th:nth-child(n+2):nth-child(-n+12), #historyTable td:nth-child(n+2):nth-child(-n+12),
+#reportTable th:nth-child(n+2), #reportTable td:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
+/* Keep descriptive/action columns left-aligned in entry history. */
+#historyTable th:nth-child(13), #historyTable td:nth-child(13),
+#historyTable th:nth-child(14), #historyTable td:nth-child(14) { text-align: left; }
