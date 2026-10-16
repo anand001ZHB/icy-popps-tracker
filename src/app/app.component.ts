@@ -82,8 +82,8 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         <button [class.active]="activeTab==='settings'" *ngIf="isAdmin" (click)="activeTab='settings'; loadSettings(); loadFixedCosts()">Settings</button>
       </nav>
 
-      <p class="notice" *ngIf="message">{{ message }}</p>
-      <p class="error" *ngIf="error">{{ error }}</p>
+      <p class="notice" *ngIf="message && !(activeTab === 'daily' && isInvalidEntryDate)"><span class="alert-icon" aria-hidden="true">ℹ️</span> {{ message }}</p>
+      <p class="error" *ngIf="error"><span class="alert-icon" aria-hidden="true">⚠️</span> {{ error }}</p>
 
       <section *ngIf="activeTab==='overview'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">AT A GLANCE</div><h3>Business overview <span class="heading-date-range">({{ selectedPeriodDescription('overview') }})</span></h3></div><div class="period-controls"><label>Show<select [(ngModel)]="overviewPreset" (ngModelChange)="onOverviewPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="overviewPreset==='custom'"><label>From<input type="date" [(ngModel)]="overviewStart" (ngModelChange)="onOverviewDateChange()" aria-label="Start date for overview"></label><label>To<input type="date" [(ngModel)]="overviewEnd" (ngModelChange)="onOverviewDateChange()" aria-label="End date for overview"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('overview')">Reset</button></div></div>
@@ -138,7 +138,7 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       <section *ngIf="activeTab==='daily'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">DAILY OPERATIONS</div><h3>{{ editingEntryId ? (role === 'staff' ? 'View daily record' : 'Edit daily record') : 'New daily record' }}</h3><p class="muted small">{{ editingEntryId ? 'This is the shared record for the selected date.' : 'No record exists for this date yet.' }}</p></div><span class="muted small">All amounts in ₹</span></div>
         <form (ngSubmit)="saveEntry()" class="entry-form">
-          <label class="entry-date-field">Date<input type="date" name="entry_date" [(ngModel)]="form.entry_date" (ngModelChange)="onDailyDateChange()" [attr.max]="latestAllowedEntryDate" required aria-describedby="entry-date-limit"><span id="entry-date-limit" class="muted small date-limit-hint">You can create entries only up to yesterday ({{ latestAllowedEntryDate | date:'d MMM yyyy' }}). Today and future dates are not allowed.</span></label>
+          <label class="entry-date-field">Date<input type="date" name="entry_date" [(ngModel)]="form.entry_date" (ngModelChange)="onDailyDateChange()" required aria-describedby="entry-date-limit"><span id="entry-date-limit" class="muted small date-limit-hint">New entries default to today. You can submit only for dates up to yesterday ({{ latestAllowedEntryDate | date:'d MMM yyyy' }}). The submit button is disabled for today and future dates.</span></label>
           <div class="form-section-title">Stock movement (units)</div>
           <label>Opening stock — Large<input type="number" min="0" name="opening_large" [(ngModel)]="form.opening_large" required [readonly]="autoOpening || (isExistingRecord && !isFirstOpeningRecord)"></label>
           <label>Opening stock — Small<input type="number" min="0" name="opening_small" [(ngModel)]="form.opening_small" required [readonly]="autoOpening || (isExistingRecord && !isFirstOpeningRecord)"></label>
@@ -163,7 +163,9 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
           <label *ngIf="canSeeFinancials">Staff takes paid today<input type="number" min="0" step="0.01" name="staff_paid_today" [(ngModel)]="form.staff_paid_today" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label class="full-span">Notes (optional)<textarea rows="2" name="notes" [(ngModel)]="form.notes" placeholder="Any explanation or reminder…" [readonly]="isExistingRecord && role === 'staff'"></textarea></label>
           <div class="form-actions full-span">
-            <button *ngIf="!(isExistingRecord && role === 'staff')" class="btn btn-primary" [disabled]="busy">{{ busy ? 'Saving…' : (editingEntryId ? 'Update shared record' : 'Create daily record') }}</button>
+            <span class="disabled-submit-wrap" *ngIf="!(isExistingRecord && role === 'staff')" [attr.title]="isInvalidEntryDate ? 'You can submit daily records only for past dates, up to yesterday.' : null">
+              <button class="btn btn-primary" [disabled]="busy || isInvalidEntryDate" [attr.aria-label]="isInvalidEntryDate ? 'Submit disabled: past dates only, up to yesterday' : null">{{ busy ? 'Saving…' : (editingEntryId ? 'Update shared record' : 'Create daily record') }}</button>
+            </span>
             <span *ngIf="isExistingRecord && role === 'staff'" class="muted small">Staff can view this shared record but cannot edit an existing record. Ask the manager or admin to make corrections.</span>
           </div>
         </form>
@@ -585,13 +587,22 @@ export class AppComponent implements OnInit {
   chartPointX(index:number,count:number):number { return count<=1?358.5:92+(index*533/(count-1)); }
   chartPointY(value:number,max:number):number { return 185-(Math.max(0,value)/Math.max(1,max))*150; }
   chartLinePoints(key:'sales'|'payments'):string { return this.reportDailySeries.map((day,index)=>`${this.chartPointX(index,this.reportDailySeries.length)},${this.chartPointY(day[key],this.reportChartMax)}`).join(' '); }
+  private formatLocalDate(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+  get todayEntryDate(): string {
+    return this.formatLocalDate(new Date());
+  }
   get latestAllowedEntryDate(): string {
     const date = new Date();
     date.setDate(date.getDate() - 1);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return this.formatLocalDate(date);
+  }
+  get isInvalidEntryDate(): boolean {
+    return !this.form.entry_date || this.form.entry_date >= this.todayEntryDate;
   }
   private emptyEntry(): Entry {
-    return { entry_date: this.latestAllowedEntryDate, opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, sold_large: 0, sold_small: 0, online_received: 0, offline_received: 0, cost_gap: 0, miscellaneous_expenses: 0, stock_purchase_paid: 0, staff_paid_today: 0, notes: '' };
+    return { entry_date: this.todayEntryDate, opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, sold_large: 0, sold_small: 0, online_received: 0, offline_received: 0, cost_gap: 0, miscellaneous_expenses: 0, stock_purchase_paid: 0, staff_paid_today: 0, notes: '' };
   }
   private clearAlerts(): void { this.message = ''; this.error = ''; }
   private requireClient(): SupabaseClient {
@@ -689,15 +700,12 @@ export class AppComponent implements OnInit {
 
   async onDailyDateChange(): Promise<void> {
     if (!this.form.entry_date) return;
-    let rejectedDate = false;
-    if (this.form.entry_date > this.latestAllowedEntryDate) {
-      this.form.entry_date = this.latestAllowedEntryDate;
-      rejectedDate = true;
-    }
+    const invalidDate = this.form.entry_date >= this.todayEntryDate;
     await this.loadEntryForDate(this.form.entry_date);
-    // loadEntryForDate clears old alerts, so show this validation after it finishes.
-    if (rejectedDate) {
-      this.error = 'Daily entries are allowed only for past dates, up to yesterday. Today and future dates are not allowed.';
+    // Keep the selected date visible; the disabled submit button and save-time
+    // validation prevent today's or a future record from being submitted.
+    if (invalidDate) {
+      this.error = 'You can submit daily records only for past dates, up to yesterday. The submit button is disabled for today and future dates.';
     }
   }
 
