@@ -547,3 +547,53 @@ html.dark-mode .report-metric-group h4{color:#e5d4c7}
 @media(max-width:850px){.report-metric-grid,.report-metric-grid-primary,.report-metric-grid-two,.report-metric-grid-three{grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px}}
 @media(max-width:560px){.report-metrics-panel{padding:10px}.report-metric-group{padding-top:8px;margin-top:8px}.report-metric-grid,.report-metric-grid-primary,.report-metric-grid-two,.report-metric-grid-three{grid-template-columns:1fr;gap:1px}.report-metric-grid .stat{padding:4px 0}.report-metric-grid .stat span{font-size:12px}.report-metric-grid .stat strong{font-size:15px;margin:2px 0 0}.report-metric-grid .stat small{display:none}}
 html.dark-mode .report-metric-grid .stat span{color:#b8a394}
+
+/* Wrap each report label/value pair in a subtle card without changing typography or stacking. */
+.report-metric-grid .stat,
+.report-metric-grid .stat.highlight{padding:5px 8px!important;border:1px solid #f0d9c5!important;border-radius:8px!important;background:#fffaf5!important;box-shadow:none!important}
+.report-metric-grid .stat:not(:first-child){border-left:1px solid #f0d9c5!important}
+html.dark-mode .report-metric-grid .stat,
+html.dark-mode .report-metric-grid .stat.highlight{border-color:#374151!important;background:#263344!important}
+html.dark-mode .report-metric-grid .stat:not(:first-child){border-left:1px solid #374151!important}
+
+
+/* Four soft pastel colors, one consistent color per report section. */
+.report-primary-metrics .report-metric-grid .stat,
+.report-primary-metrics .report-metric-grid .stat.highlight{background:#fff1e5!important;border-color:#f5d7bd!important}
+.report-daily-metrics .report-metric-grid .stat,
+.report-daily-metrics .report-metric-grid .stat.highlight{background:#eaf4ff!important;border-color:#cfe3f8!important}
+.report-cost-metrics .report-metric-grid .stat,
+.report-cost-metrics .report-metric-grid .stat.highlight{background:#eaf7ee!important;border-color:#cce8d4!important}
+.report-staff-metrics .report-metric-grid .stat,
+.report-staff-metrics .report-metric-grid .stat.highlight{background:#f3edff!important;border-color:#ddd0f7!important}
+.report-primary-metrics .report-metric-grid .stat:not(:first-child),
+.report-daily-metrics .report-metric-grid .stat:not(:first-child),
+.report-cost-metrics .report-metric-grid .stat:not(:first-child),
+.report-staff-metrics .report-metric-grid .stat:not(:first-child){border-left:1px solid currentColor!important}
+.report-primary-metrics .report-metric-grid .stat:not(:first-child){border-left-color:#f5d7bd!important}
+.report-daily-metrics .report-metric-grid .stat:not(:first-child){border-left-color:#cfe3f8!important}
+.report-cost-metrics .report-metric-grid .stat:not(:first-child){border-left-color:#cce8d4!important}
+.report-staff-metrics .report-metric-grid .stat:not(:first-child){border-left-color:#ddd0f7!important}
+html.dark-mode .report-primary-metrics .report-metric-grid .stat,html.dark-mode .report-primary-metrics .report-metric-grid .stat.highlight{background:#49382d!important;border-color:#6b5140!important}
+html.dark-mode .report-daily-metrics .report-metric-grid .stat,html.dark-mode .report-daily-metrics .report-metric-grid .stat.highlight{background:#293e53!important;border-color:#3c5875!important}
+html.dark-mode .report-cost-metrics .report-metric-grid .stat,html.dark-mode .report-cost-metrics .report-metric-grid .stat.highlight{background:#294438!important;border-color:#3d6651!important}
+html.dark-mode .report-staff-metrics .report-metric-grid .stat,html.dark-mode .report-staff-metrics .report-metric-grid .stat.highlight{background:#3d3452!important;border-color:#5a4a79!important}
+
+/* Reports: distinct row spacing and concise calculation hints inside metric cards. */
+.report-metric-grid,.report-metric-grid-primary,.report-metric-grid-two,.report-metric-grid-three{row-gap:8px!important}
+.report-metric-grid .stat small{display:block!important;margin:3px 0 0;font-size:10px;line-height:1.3;color:#806d60;white-space:normal}
+html.dark-mode .report-metric-grid .stat small{color:#c0b3a7}
+@media(max-width:560px){.report-metric-grid,.report-metric-grid-primary,.report-metric-grid-two,.report-metric-grid-three{row-gap:8px!important}.report-metric-grid .stat small{display:block!important;font-size:10px}}
+
+
+/* Reports: brighter, higher-contrast metric labels while preserving the current size and layout. */
+.report-metric-grid .stat span{color:#76513c!important;font-weight:600!important}
+.report-primary-metrics .report-metric-grid .stat span{color:#9a5428!important}
+.report-daily-metrics .report-metric-grid .stat span{color:#2d679b!important}
+.report-cost-metrics .report-metric-grid .stat span{color:#2f7045!important}
+.report-staff-metrics .report-metric-grid .stat span{color:#6543a0!important}
+html.dark-mode .report-metric-grid .stat span{color:#e7d7c9!important}
+html.dark-mode .report-primary-metrics .report-metric-grid .stat span{color:#ffc18e!important}
+html.dark-mode .report-daily-metrics .report-metric-grid .stat span{color:#a9d4ff!important}
+html.dark-mode .report-cost-metrics .report-metric-grid .stat span{color:#a8e2b8!important}
+html.dark-mode .report-staff-metrics .report-metric-grid .stat span{color:#d0baff!important}

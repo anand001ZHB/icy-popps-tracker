@@ -94,7 +94,7 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
         <div class="stats-grid">
           <article class="stat" *ngIf="canSeeFinancials"><span>Sales recorded</span><strong>{{ totalSales | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Payments received</span><strong>{{ totalPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
-          <article class="stat" *ngIf="canSeeFinancials"><span>Avg daily sales</span><strong>{{ averageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
+          <article class="stat" *ngIf="canSeeFinancials"><span>Avg daily sales</span><strong>{{ averageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total sales ÷ days in selected period</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Estimated profit after all expenses</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and allocated fixed expenses · {{ selectedPeriodDescription('overview') }}</small></article>
         </div>
 
@@ -225,34 +225,34 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
           <div class="report-metric-group report-primary-metrics">
             <h4>Performance and payment summary</h4>
             <div class="report-metric-grid report-metric-grid-three">
-              <article class="stat"><span>Total sales</span><strong>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-              <article class="stat"><span>Total payment rcvd</span><strong>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Online + offline payments</small></article>
-              <article class="stat"><span>Online payments</span><strong>{{ reportOnlinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-              <article class="stat"><span>Offline payments</span><strong>{{ reportOfflinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-              <article class="stat highlight"><span>Net profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>After recorded costs and allocated fixed costs.</small></article>
+              <article class="stat"><span>Total sales</span><strong>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Large sales + small sales</small></article>
+              <article class="stat"><span>Total payment rcvd</span><strong>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Online payments + offline payments</small></article>
+              <article class="stat"><span>Online payments</span><strong>{{ reportOnlinePayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sum of online payments in this period</small></article>
+              <article class="stat"><span>Offline payments</span><strong>{{ reportOfflinePayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sum of offline payments in this period</small></article>
+              <article class="stat highlight"><span>Net profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales − (staff share + cost gap + Misc + fixed cost)</small></article>
             </div>
           </div>
-          <div class="report-metric-group">
+          <div class="report-metric-group report-daily-metrics">
             <h4>Daily averages</h4>
             <div class="report-metric-grid report-metric-grid-two">
-              <article class="stat"><span>Avg daily sales</span><strong>{{ reportAverageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
-              <article class="stat"><span>Avg daily net profit</span><strong>{{ reportAverageDailyTakeHome | currency:'INR':'symbol':'1.0-0' }}</strong><small>Net profit divided by selected calendar days</small></article>
+              <article class="stat"><span>Avg daily sales</span><strong>{{ reportAverageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total sales ÷ days in selected period</small></article>
+              <article class="stat"><span>Avg daily net profit</span><strong>{{ reportAverageDailyTakeHome | currency:'INR':'symbol':'1.0-0' }}</strong><small>Net profit ÷ days in selected period</small></article>
             </div>
           </div>
-          <div class="report-metric-group">
+          <div class="report-metric-group report-cost-metrics">
             <h4>Costs and expenses</h4>
             <div class="report-metric-grid report-metric-grid-four">
-              <article class="stat"><span>Cost gap</span><strong>{{ report.gap | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-              <article class="stat"><span>Misc</span><strong>{{ report.misc | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat"><span>Cost gap</span><strong>{{ report.gap | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total sales − Total payment rcvd</small></article>
+              <article class="stat"><span>Misc</span><strong>{{ report.misc | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total miscellaneous expenses recorded</small></article>
               <article class="stat"><span>Fixed cost</span><strong>{{ reportFixedCost | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ activeFixedCostCount }} active cost items · {{ selectedPeriodDescription('report') }}</small></article>
             </div>
           </div>
           <div class="report-metric-group report-staff-metrics">
             <h4>Staff settlement</h4>
             <div class="report-metric-grid report-metric-grid-three">
-              <article class="stat"><span>Staff share earned</span><strong>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-              <article class="stat"><span>Staff paid in advance</span><strong>{{ report.paid | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-              <article class="stat"><span>Staff share still due</span><strong>{{ (report.staff - report.paid) | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat"><span>Staff share earned</span><strong>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total staff share for this period</small></article>
+              <article class="stat"><span>Staff paid in advance</span><strong>{{ report.paid | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total staff payments already made</small></article>
+              <article class="stat"><span>Staff share still due</span><strong>{{ (report.staff - report.paid) | currency:'INR':'symbol':'1.0-0' }}</strong><small>Staff share earned − Staff paid in advance</small></article>
             </div>
           </div>
         </section>
