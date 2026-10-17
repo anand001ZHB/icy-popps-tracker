@@ -18,6 +18,7 @@ interface Entry {
   notes: string; created_by?: string; updated_by?: string; updated_at?: string;
   closing_large?: number; closing_small?: number;
   large_sales?: number; small_sales?: number; staff_share?: number;
+  large_price?: number; small_price?: number;
 }
 interface ProductSettings { large_price: number; small_price: number; large_staff_pct: number; small_staff_pct: number; }
 interface FixedCost { id: string; vendor_id: string; name: string; amount: number; active: boolean; notes?: string; }
@@ -150,6 +151,9 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
           <label>Stock received — Small<input type="number" min="0" name="received_small" [(ngModel)]="form.received_small" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label>Units sold — Large<input type="number" min="0" name="sold_large" [(ngModel)]="form.sold_large" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label>Units sold — Small<input type="number" min="0" name="sold_small" [(ngModel)]="form.sold_small" required [readonly]="isExistingRecord && role === 'staff'"></label>
+          <div class="form-section-title" *ngIf="canSeeFinancials">Selling price per item (₹)</div>
+          <label *ngIf="canSeeFinancials">Large item price (₹)<input type="number" min="0" step="0.01" name="large_price" [(ngModel)]="form.large_price" required [readonly]="isExistingRecord && role === 'staff'"></label>
+          <label *ngIf="canSeeFinancials">Small item price (₹)<input type="number" min="0" step="0.01" name="small_price" [(ngModel)]="form.small_price" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <div class="preview full-span">
             <div><span>Closing stock — Large</span><strong>{{ closingLarge }}</strong></div>
             <div><span>Closing stock — Small</span><strong>{{ closingSmall }}</strong></div>
@@ -292,17 +296,15 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
       </section>
 
       <section *ngIf="activeTab==='settings'" class="panel">
-        <div class="section-heading"><div><div class="eyebrow">ADMIN SETTINGS</div><h3>Product prices and staff share</h3></div></div>
+        <div class="section-heading"><div><div class="eyebrow">ADMIN SETTINGS</div><h3>Staff share settings</h3></div></div>
         <form class="settings-form" (ngSubmit)="saveSettings()">
           <div class="form-section-title">Large product</div>
-          <label>Price per unit (₹)<input type="number" min="0" step="0.01" [(ngModel)]="settings.large_price" name="large_price" required></label>
           <label>Staff share (%)<input type="number" min="0" max="100" step="0.1" [(ngModel)]="settings.large_staff_pct" name="large_staff_pct" required></label>
           <div class="form-section-title">Small product</div>
-          <label>Price per unit (₹)<input type="number" min="0" step="0.01" [(ngModel)]="settings.small_price" name="small_price" required></label>
           <label>Staff share (%)<input type="number" min="0" max="100" step="0.1" [(ngModel)]="settings.small_staff_pct" name="small_staff_pct" required></label>
-          <div class="full-span"><button class="btn btn-primary" [disabled]="busy">Save settings</button></div>
+          <div class="full-span"><button class="btn btn-primary" [disabled]="busy">Save staff share settings</button></div>
         </form>
-        <p class="muted small">Defaults: Large ₹25 with 15% staff share; Small ₹15 with 17% staff share.</p>
+        <p class="muted small">Selling prices are entered separately for each date in Daily Hisab. Staff share percentages remain configured here.</p>
         <div class="fixed-cost-section">
           <div class="section-heading"><div><div class="eyebrow">VENDOR-SPECIFIC</div><h3>Recurring fixed costs</h3><p class="muted small">These amounts are deducted monthly in reports. Edit them whenever this vendor's costs change.</p></div></div>
           <form class="fixed-cost-form" (ngSubmit)="saveFixedCost()">
@@ -499,8 +501,8 @@ export class AppComponent implements OnInit {
   }
   get closingLarge(): number { return Number(this.form.opening_large || 0) + Number(this.form.received_large || 0) - Number(this.form.sold_large || 0); }
   get closingSmall(): number { return Number(this.form.opening_small || 0) + Number(this.form.received_small || 0) - Number(this.form.sold_small || 0); }
-  get largeSales(): number { return Number(this.form.sold_large || 0) * this.settings.large_price; }
-  get smallSales(): number { return Number(this.form.sold_small || 0) * this.settings.small_price; }
+  get largeSales(): number { return Number(this.form.sold_large || 0) * Number(this.form.large_price ?? this.settings.large_price); }
+  get smallSales(): number { return Number(this.form.sold_small || 0) * Number(this.form.small_price ?? this.settings.small_price); }
   get salesTotal(): number { return this.largeSales + this.smallSales; }
   get staffShare(): number { return this.largeSales * this.settings.large_staff_pct / 100 + this.smallSales * this.settings.small_staff_pct / 100; }
   get reportProfit(): number { return this.report.sales - this.report.stock - this.report.staff - this.report.gap - this.report.misc - this.reportFixedCost; }
@@ -614,7 +616,7 @@ export class AppComponent implements OnInit {
     return !this.form.entry_date || this.form.entry_date >= this.todayEntryDate;
   }
   private emptyEntry(): Entry {
-    return { entry_date: this.todayEntryDate, opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, sold_large: 0, sold_small: 0, online_received: 0, offline_received: 0, cost_gap: 0, miscellaneous_expenses: 0, stock_purchase_paid: 0, staff_paid_today: 0, notes: '' };
+    return { entry_date: this.todayEntryDate, opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, sold_large: 0, sold_small: 0, large_price: this.settings.large_price, small_price: this.settings.small_price, online_received: 0, offline_received: 0, cost_gap: 0, miscellaneous_expenses: 0, stock_purchase_paid: 0, staff_paid_today: 0, notes: '' };
   }
   private clearAlerts(): void { this.message = ''; this.error = ''; }
   private requireClient(): SupabaseClient {
@@ -819,6 +821,8 @@ export class AppComponent implements OnInit {
         miscellaneous_expenses: Number(this.form.miscellaneous_expenses || 0),
         stock_purchase_paid: Number(this.form.stock_purchase_paid || 0),
         staff_paid_today: Number(this.form.staff_paid_today || 0),
+        large_price: Number(this.form.large_price ?? this.settings.large_price),
+        small_price: Number(this.form.small_price ?? this.settings.small_price),
         large_sales: this.largeSales,
         small_sales: this.smallSales,
         staff_share: this.staffShare,
@@ -938,8 +942,8 @@ export class AppComponent implements OnInit {
     finally { this.busy = false; }
   }
   canEditEntry(_e: Entry): boolean { return this.role === 'admin' || this.role === 'manager'; }
-  largeSalesFor(e: Entry): number { return Number(e.large_sales ?? Number(e.sold_large || 0) * this.settings.large_price); }
-  smallSalesFor(e: Entry): number { return Number(e.small_sales ?? Number(e.sold_small || 0) * this.settings.small_price); }
+  largeSalesFor(e: Entry): number { return Number(e.large_sales ?? Number(e.sold_large || 0) * Number(e.large_price ?? this.settings.large_price)); }
+  smallSalesFor(e: Entry): number { return Number(e.small_sales ?? Number(e.sold_small || 0) * Number(e.small_price ?? this.settings.small_price)); }
   salesFor(e: Entry): number { return this.largeSalesFor(e) + this.smallSalesFor(e); }
   onOverviewPeriodChange(): void { this.calculateReport(); }
   onReportPeriodChange(): void { this.calculateReport(); }
