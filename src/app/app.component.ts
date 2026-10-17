@@ -94,10 +94,9 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
         <section class="report-metrics-panel overview-metrics-panel" aria-label="Overview summary metrics" *ngIf="canSeeFinancials">
           <div class="report-metric-group report-primary-metrics">
             <h4>Performance and payment summary</h4>
-            <div class="report-metric-grid report-metric-grid-three">
+            <div class="report-metric-grid report-metric-grid-two">
               <article class="stat"><span>Sales recorded</span><strong>{{ totalSales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Large sales + small sales</small></article>
               <article class="stat"><span>Total payment rcvd</span><strong>{{ totalPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Online payments + offline payments</small></article>
-              <article class="stat highlight"><span>Net profit</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales − (staff share + cost gap + Misc + fixed cost)</small></article>
             </div>
           </div>
           <div class="report-metric-group report-daily-metrics">
