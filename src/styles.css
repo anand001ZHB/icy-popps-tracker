@@ -396,3 +396,14 @@ html.dark-mode .table-export-btn:hover { background: #3b2b1f; border-color: #9a3
 /* Keep descriptive/action columns left-aligned in entry history. */
 #historyTable th:nth-child(13), #historyTable td:nth-child(13),
 #historyTable th:nth-child(14), #historyTable td:nth-child(14) { text-align: left; }
+
+/* Stock purchase form/export spacing and totals row */
+.stock-purchase-actions { margin-bottom: 14px; }
+.stock-purchase-export { margin-top: 18px; margin-bottom: 12px; }
+#stockPurchaseTable tfoot th { background: #fff1e2; font-weight: 800; }
+#stockPurchaseTable .numeric-cell { text-align: right; font-variant-numeric: tabular-nums; }
+html.dark-mode #stockPurchaseTable tfoot th { background: #1f2937; color: #e5e7eb; }
+@media (max-width: 600px) { .stock-purchase-export { margin-top: 16px; } }
+
+/* Keep stock purchase save/update feedback visible on its own tab. */
+.stock-feedback { margin: 0 0 14px; }
