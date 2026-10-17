@@ -94,7 +94,7 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
         <div class="stats-grid">
           <article class="stat" *ngIf="canSeeFinancials"><span>Sales recorded</span><strong>{{ totalSales | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Payments received</span><strong>{{ totalPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
-          <article class="stat" *ngIf="canSeeFinancials"><span>Average daily sales</span><strong>{{ averageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
+          <article class="stat" *ngIf="canSeeFinancials"><span>Avg daily sales</span><strong>{{ averageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
           <article class="stat" *ngIf="canSeeFinancials"><span>Estimated profit after all expenses</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and allocated fixed expenses · {{ selectedPeriodDescription('overview') }}</small></article>
         </div>
 
@@ -175,7 +175,7 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
           <label *ngIf="canSeeFinancials">Online payment received<input type="number" min="0" step="0.01" name="online_received" [(ngModel)]="form.online_received" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label *ngIf="canSeeFinancials">Offline payment received<input type="number" min="0" step="0.01" name="offline_received" [(ngModel)]="form.offline_received" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label *ngIf="canSeeFinancials">Cost gap<input type="number" min="0" step="0.01" name="cost_gap" [(ngModel)]="form.cost_gap" required [readonly]="isExistingRecord && role === 'staff'"></label>
-          <label *ngIf="canSeeFinancials">Miscellaneous expenses<input type="number" min="0" step="0.01" name="miscellaneous_expenses" [(ngModel)]="form.miscellaneous_expenses" required [readonly]="isExistingRecord && role === 'staff'"></label>
+          <label *ngIf="canSeeFinancials">Misc<input type="number" min="0" step="0.01" name="miscellaneous_expenses" [(ngModel)]="form.miscellaneous_expenses" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label *ngIf="canSeeFinancials">Staff takes paid today<input type="number" min="0" step="0.01" name="staff_paid_today" [(ngModel)]="form.staff_paid_today" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label class="full-span">Notes (optional)<textarea rows="2" name="notes" [(ngModel)]="form.notes" placeholder="Any explanation or reminder…" [readonly]="isExistingRecord && role === 'staff'"></textarea></label>
           <div class="form-actions full-span">
@@ -221,21 +221,41 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
 
       <section *ngIf="activeTab==='reports'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">BUSINESS PERFORMANCE</div><h3>Reports <span class="heading-date-range">({{ selectedPeriodDescription('report') }})</span></h3></div><div class="period-controls"><label>Show<select [(ngModel)]="reportPreset" (ngModelChange)="onReportPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="reportPreset==='custom'"><label>From<input type="date" [(ngModel)]="reportStart" (ngModelChange)="onReportDateChange()" aria-label="Start date for report"></label><label>To<input type="date" [(ngModel)]="reportEnd" (ngModelChange)="onReportDateChange()" aria-label="End date for report"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('report')">Reset</button></div></div>
-        <div class="stats-grid">
-          <article class="stat"><span>Total sales</span><strong>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-          <article class="stat"><span>Average daily sales</span><strong>{{ reportAverageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
-          <article class="stat"><span>Average daily take home</span><strong>{{ reportAverageDailyTakeHome | currency:'INR':'symbol':'1.0-0' }}</strong><small>Estimated pocket profit divided by selected calendar days</small></article>
-          <article class="stat"><span>Staff share earned</span><strong>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-          <article class="stat"><span>Online payments</span><strong>{{ reportOnlinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-          <article class="stat"><span>Offline payments</span><strong>{{ reportOfflinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-          <article class="stat highlight"><span>Total payments received</span><strong>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Online + offline payments</small></article>
-          <article class="stat"><span>Cost gap</span><strong>{{ report.gap | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-          <article class="stat"><span>Miscellaneous expenses</span><strong>{{ report.misc | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-          <article class="stat"><span>Fixed costs for period</span><strong>{{ reportFixedCost | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ activeFixedCostCount }} active cost items · {{ selectedPeriodDescription('report') }}</small></article>
-          <article class="stat highlight"><span>Estimated pocket profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and fixed costs for the selected period.</small></article>
-          <article class="stat"><span>Staff paid in advance</span><strong>{{ report.paid | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-          <article class="stat"><span>Staff share still due</span><strong>{{ (report.staff - report.paid) | currency:'INR':'symbol':'1.0-0' }}</strong></article>
-        </div>
+        <section class="report-metrics-panel" aria-label="Report summary metrics">
+          <div class="report-metric-group report-primary-metrics">
+            <h4>Performance and payment summary</h4>
+            <div class="report-metric-grid report-metric-grid-three">
+              <article class="stat"><span>Total sales</span><strong>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat"><span>Total payment rcvd</span><strong>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Online + offline payments</small></article>
+              <article class="stat"><span>Online payments</span><strong>{{ reportOnlinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat"><span>Offline payments</span><strong>{{ reportOfflinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat highlight"><span>Net profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>After recorded costs and allocated fixed costs.</small></article>
+            </div>
+          </div>
+          <div class="report-metric-group">
+            <h4>Daily averages</h4>
+            <div class="report-metric-grid report-metric-grid-two">
+              <article class="stat"><span>Avg daily sales</span><strong>{{ reportAverageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
+              <article class="stat"><span>Avg daily net profit</span><strong>{{ reportAverageDailyTakeHome | currency:'INR':'symbol':'1.0-0' }}</strong><small>Net profit divided by selected calendar days</small></article>
+            </div>
+          </div>
+          <div class="report-metric-group">
+            <h4>Costs and expenses</h4>
+            <div class="report-metric-grid report-metric-grid-four">
+              <article class="stat"><span>Cost gap</span><strong>{{ report.gap | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat"><span>Misc</span><strong>{{ report.misc | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat"><span>Fixed cost</span><strong>{{ reportFixedCost | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ activeFixedCostCount }} active cost items · {{ selectedPeriodDescription('report') }}</small></article>
+            </div>
+          </div>
+          <div class="report-metric-group report-staff-metrics">
+            <h4>Staff settlement</h4>
+            <div class="report-metric-grid report-metric-grid-three">
+              <article class="stat"><span>Staff share earned</span><strong>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat"><span>Staff paid in advance</span><strong>{{ report.paid | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+              <article class="stat"><span>Staff share still due</span><strong>{{ (report.staff - report.paid) | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+            </div>
+          </div>
+        </section>
 
         <div class="visual-grid report-visual-grid">
           <article class="visual-card" [class.full-width-chart]="reportDailySeries.length <= 31">
@@ -623,7 +643,7 @@ export class AppComponent implements OnInit {
   get reportPayments(): number { return this.reportOnlinePayments + this.reportOfflinePayments; }
   get reportTotalExpenses(): number { return this.report.staff + this.report.gap + this.report.misc + this.reportFixedCost; }
   get reportExpenseBreakdown(): Array<{ label: string; amount: number; width: string }> {
-    const items = [{label:'Staff share earned',amount:this.report.staff},{label:'Cost gap',amount:this.report.gap},{label:'Miscellaneous',amount:this.report.misc},{label:'Fixed costs for period',amount:this.reportFixedCost}];
+    const items = [{label:'Staff share earned',amount:this.report.staff},{label:'Cost gap',amount:this.report.gap},{label:'Miscellaneous',amount:this.report.misc},{label:'Fixed cost',amount:this.reportFixedCost}];
     const max=Math.max(1,...items.map(item=>item.amount)); return items.map(item=>({...item,width:`${Math.max(item.amount>0?2:0,item.amount/max*100)}%`}));
   }
   get overviewChartMax(): number { return Math.max(1, ...this.overviewTrend.map(day => day.sales)); }

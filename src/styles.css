@@ -516,3 +516,34 @@ html.dark-mode .table-export-icon:hover { background: #3b2b1f; border-color: #9a
   gap: 10px;
   margin: 12px 0;
 }
+
+
+/* Reports: grouped metric section with consistent spacing and responsive grids. */
+.report-metrics-panel{display:flex;flex-direction:column;gap:0;margin:0 0 24px;padding:18px;border:1px solid #f2ddc8;border-radius:14px;background:#fffdfa}
+.report-metric-group{padding:17px 0 0;margin-top:17px;border-top:1px solid #f2dfce}
+.report-metric-group:first-child{padding-top:0;margin-top:0;border-top:0}
+.report-metric-group h4{margin:0 0 12px;font:800 13px Manrope,sans-serif;color:#6b4a36}
+.report-metric-grid{display:grid;gap:12px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.report-metric-grid-primary{grid-template-columns:repeat(3,minmax(0,1fr))}
+.report-metric-grid-two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.report-metric-grid-three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.report-metric-grid .stat{height:auto;padding:8px 12px;border:0;border-radius:0;background:transparent;box-shadow:none;min-height:0}.report-metric-grid .stat.highlight{background:transparent;border-color:transparent}.report-metric-grid .stat strong{margin:6px 0 2px}.report-metric-grid .stat:not(:first-child){border-left:1px solid #f2dfce;border-radius:0}html.dark-mode .report-metric-grid .stat:not(:first-child){border-left-color:#374151}
+.report-metric-grid .stat strong{font-size:clamp(17px,1.5vw,23px)}
+html.dark-mode .report-metrics-panel{background:#202b3a;border-color:#374151}
+html.dark-mode .report-metric-group{border-color:#374151}
+html.dark-mode .report-metric-group h4{color:#e5d4c7}
+@media(max-width:850px){.report-metric-grid,.report-metric-grid-primary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.report-metrics-panel{padding:13px}.report-metric-group{padding-top:14px;margin-top:14px}.report-metric-grid,.report-metric-grid-primary,.report-metric-grid-two,.report-metric-grid-three{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.report-metric-grid .stat{padding:8px 6px}.report-metric-grid .stat span{font-size:11px}.report-metric-grid .stat strong{font-size:16px;margin:7px 0 4px}.report-metric-grid .stat small{font-size:10px}}
+
+/* Compact report metrics: labels above values, with minimal vertical spacing. */
+.report-metrics-panel{gap:0;margin-bottom:14px;padding:12px 14px;border-radius:10px}
+.report-metric-group{padding-top:9px;margin-top:9px}
+.report-metric-group h4{margin:0 0 5px;font-size:12px}
+.report-metric-grid,.report-metric-grid-primary,.report-metric-grid-two,.report-metric-grid-three{grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 18px;align-items:center}
+.report-metric-grid .stat{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px;padding:5px 0;min-height:0;border:0!important;background:transparent!important;box-shadow:none!important}
+.report-metric-grid .stat span{font-size:13px;line-height:1.25;color:#8a6e5c}
+.report-metric-grid .stat strong{margin:2px 0 0;font-size:16px;line-height:1.25;white-space:nowrap}
+.report-metric-grid .stat small{display:none}
+@media(max-width:850px){.report-metric-grid,.report-metric-grid-primary,.report-metric-grid-two,.report-metric-grid-three{grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px}}
+@media(max-width:560px){.report-metrics-panel{padding:10px}.report-metric-group{padding-top:8px;margin-top:8px}.report-metric-grid,.report-metric-grid-primary,.report-metric-grid-two,.report-metric-grid-three{grid-template-columns:1fr;gap:1px}.report-metric-grid .stat{padding:4px 0}.report-metric-grid .stat span{font-size:12px}.report-metric-grid .stat strong{font-size:15px;margin:2px 0 0}.report-metric-grid .stat small{display:none}}
+html.dark-mode .report-metric-grid .stat span{color:#b8a394}
