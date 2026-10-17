@@ -597,3 +597,9 @@ html.dark-mode .report-primary-metrics .report-metric-grid .stat span{color:#ffc
 html.dark-mode .report-daily-metrics .report-metric-grid .stat span{color:#a9d4ff!important}
 html.dark-mode .report-cost-metrics .report-metric-grid .stat span{color:#a8e2b8!important}
 html.dark-mode .report-staff-metrics .report-metric-grid .stat span{color:#d0baff!important}
+
+
+/* Keep Overview summary metrics visually consistent with Reports. */
+.overview-metrics-panel{margin-top:12px}
+.overview-metrics-panel .report-daily-metrics .report-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:560px){.overview-metrics-panel .report-daily-metrics .report-metric-grid{grid-template-columns:1fr}}

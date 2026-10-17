@@ -91,12 +91,22 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
 
       <section *ngIf="activeTab==='overview'" class="panel">
         <div class="section-heading"><div><div class="eyebrow">AT A GLANCE</div><h3>Business overview <span class="heading-date-range">({{ selectedPeriodDescription('overview') }})</span></h3></div><div class="period-controls"><label>Show<select [(ngModel)]="overviewPreset" (ngModelChange)="onOverviewPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="overviewPreset==='custom'"><label>From<input type="date" [(ngModel)]="overviewStart" (ngModelChange)="onOverviewDateChange()" aria-label="Start date for overview"></label><label>To<input type="date" [(ngModel)]="overviewEnd" (ngModelChange)="onOverviewDateChange()" aria-label="End date for overview"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('overview')">Reset</button></div></div>
-        <div class="stats-grid">
-          <article class="stat" *ngIf="canSeeFinancials"><span>Sales recorded</span><strong>{{ totalSales | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
-          <article class="stat" *ngIf="canSeeFinancials"><span>Payments received</span><strong>{{ totalPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ selectedPeriodDescription('overview') }}</small></article>
-          <article class="stat" *ngIf="canSeeFinancials"><span>Avg daily sales</span><strong>{{ averageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total sales ÷ days in selected period</small></article>
-          <article class="stat" *ngIf="canSeeFinancials"><span>Estimated profit after all expenses</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales minus recorded costs and allocated fixed expenses · {{ selectedPeriodDescription('overview') }}</small></article>
-        </div>
+        <section class="report-metrics-panel overview-metrics-panel" aria-label="Overview summary metrics" *ngIf="canSeeFinancials">
+          <div class="report-metric-group report-primary-metrics">
+            <h4>Performance and payment summary</h4>
+            <div class="report-metric-grid report-metric-grid-three">
+              <article class="stat"><span>Sales recorded</span><strong>{{ totalSales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Large sales + small sales</small></article>
+              <article class="stat"><span>Total payment rcvd</span><strong>{{ totalPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Online payments + offline payments</small></article>
+              <article class="stat highlight"><span>Net profit</span><strong>{{ pocketProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales − (staff share + cost gap + Misc + fixed cost)</small></article>
+            </div>
+          </div>
+          <div class="report-metric-group report-daily-metrics">
+            <h4>Daily averages</h4>
+            <div class="report-metric-grid report-metric-grid-two">
+              <article class="stat"><span>Avg daily sales</span><strong>{{ averageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total sales ÷ days in selected period</small></article>
+            </div>
+          </div>
+        </section>
 
         <div class="visual-grid" *ngIf="canSeeFinancials">
           <article class="visual-card" [class.full-width-chart]="overviewTrend.length <= 31">
