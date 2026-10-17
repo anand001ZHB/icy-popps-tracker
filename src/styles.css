@@ -407,3 +407,48 @@ html.dark-mode #stockPurchaseTable tfoot th { background: #1f2937; color: #e5e7e
 
 /* Keep stock purchase save/update feedback visible on its own tab. */
 .stock-feedback { margin: 0 0 14px; }
+
+
+/* Clean, consistent charts for Sales Trend and Sales vs Payments */
+.chart-canvas { position: relative; width: 100%; min-width: 0; padding-top: 2px; }
+.clear-chart { display: block; width: 100%; height: 260px; overflow: visible; }
+.chart-view-toggle { position: absolute; z-index: 2; top: 7px; right: 8px; display: grid; place-items: center; width: 30px; height: 30px; padding: 5px; border: 1px solid #f2ddc8; border-radius: 7px; background: #fffaf5; color: #9a3412; cursor: pointer; }
+.chart-view-toggle:hover { background: #ffedd5; border-color: #fdba74; }
+.chart-view-toggle:focus-visible { outline: 2px solid #ea580c; outline-offset: 2px; }
+.chart-view-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.chart-bar { vector-effect: non-scaling-stroke; }
+.sales-bar { fill: #ea580c; }
+.payments-bar { fill: #7c9b8e; }
+.chart-line { stroke-width: 1.35 !important; stroke-linecap: round; stroke-linejoin: round; }
+.chart-point { stroke-width: 0.8 !important; }
+.chart-axis-label { fill: #8a7162; font: 10px 'DM Sans', sans-serif; }
+.chart-axis-line { stroke: #b9a393; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.chart-grid-line { stroke: #ead8c8; stroke-width: 0.8; stroke-dasharray: 2 4; }
+html.dark-mode .chart-view-toggle { background: #111827; color: #fdba74; border-color: #4b5563; }
+html.dark-mode .chart-axis-label { fill: #9ca3af; }
+html.dark-mode .chart-axis-line { stroke: #6b7280; }
+html.dark-mode .chart-grid-line { stroke: #374151; }
+@media (max-width: 560px) { .clear-chart { height: 245px; } .chart-view-toggle { top: 5px; right: 4px; width: 27px; height: 27px; } .chart-axis-label { font-size: 9px; } }
+
+
+/* Mobile-friendly chart polish: thinner bars, top-right toggle, compact date labels. */
+.visual-card:has(.chart-view-toggle) { position: relative; }
+.chart-canvas { position: static; }
+.chart-view-toggle { top: 14px; right: 14px; }
+.visual-card:has(.chart-view-toggle) .visual-heading { padding-right: 42px; }
+.chart-date-label { font-size: 10px; }
+.chart-bar { shape-rendering: geometricPrecision; }
+@media (max-width: 560px) {
+  .chart-view-toggle { top: 12px; right: 12px; width: 27px; height: 27px; }
+  .visual-card:has(.chart-view-toggle) .visual-heading { padding-right: 36px; }
+  .chart-date-label { font-size: 9px; }
+  .clear-chart { height: 245px; }
+}
+
+
+/* Chart date-label spacing: keep labels clear of the baseline and inset the first/last points. */
+.chart-date-label { dominant-baseline: middle; }
+@media (max-width: 560px) {
+  .chart-date-label { font-size: 8px; }
+  .clear-chart { height: 245px; }
+}
