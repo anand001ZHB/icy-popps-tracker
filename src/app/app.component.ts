@@ -146,8 +146,15 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
         <div class="section-heading"><div><div class="eyebrow">DAILY OPERATIONS</div><h3>{{ editingEntryId ? (role === 'staff' ? 'View daily record' : 'Edit daily record') : 'New daily record' }}</h3><p class="muted small">{{ editingEntryId ? 'This is the shared record for the selected date.' : 'No record exists for this date yet.' }}</p></div><span class="muted small">All amounts in ₹</span></div>
         <form (ngSubmit)="saveEntry()" class="entry-form">
           <label class="entry-date-field">Date<input type="date" name="entry_date" [(ngModel)]="form.entry_date" (ngModelChange)="onDailyDateChange()" required aria-describedby="entry-date-limit"><span id="entry-date-limit" class="muted small date-limit-hint">New entries default to today. You can submit only for dates up to yesterday ({{ latestAllowedEntryDate | date:'d MMM yyyy' }}). The submit button is disabled for today and future dates.</span></label>
+          <div class="form-section-title full-span">Stock balance (calculated automatically)</div>
+          <label>Opening stock — Large<input type="number" name="opening_large" [ngModel]="form.opening_large" readonly aria-readonly="true"></label>
+          <label>Opening stock — Small<input type="number" name="opening_small" [ngModel]="form.opening_small" readonly aria-readonly="true"></label>
+          <label>Stock received — Large<input type="number" name="received_large" [ngModel]="form.received_large" readonly aria-readonly="true"></label>
+          <label>Stock received — Small<input type="number" name="received_small" [ngModel]="form.received_small" readonly aria-readonly="true"></label>
           <label>Units sold — Large<input type="number" min="0" name="sold_large" [(ngModel)]="form.sold_large" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label>Units sold — Small<input type="number" min="0" name="sold_small" [(ngModel)]="form.sold_small" required [readonly]="isExistingRecord && role === 'staff'"></label>
+          <label>Closing stock — Large<input type="number" name="closing_large" [ngModel]="calculatedClosingLarge" readonly aria-readonly="true"></label>
+          <label>Closing stock — Small<input type="number" name="closing_small" [ngModel]="calculatedClosingSmall" readonly aria-readonly="true"></label>
           <div class="form-section-title" *ngIf="canSeeFinancials">Selling price per item (₹)</div>
           <label *ngIf="canSeeFinancials">Large item price (₹)<input type="number" min="0" step="0.01" name="large_price" [(ngModel)]="form.large_price" required [readonly]="isExistingRecord && role === 'staff'"></label>
           <label *ngIf="canSeeFinancials">Small item price (₹)<input type="number" min="0" step="0.01" name="small_price" [(ngModel)]="form.small_price" required [readonly]="isExistingRecord && role === 'staff'"></label>
@@ -200,9 +207,9 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
           <button type="button" class="table-export-btn" title="Download PDF" aria-label="Download PDF" (click)="downloadTablePdf('historyTable', 'Icy Popps - Entry History')"><span aria-hidden="true">▤</span><span>PDF</span></button>
         </div>
         <div class="table-wrap" *ngIf="entries.length; else noEntries">
-          <table id="historyTable"><thead><tr><th>Date</th><th>Large sold</th><th>Small sold</th><th *ngIf="canSeeFinancials">Sales (₹)</th><th *ngIf="canSeeFinancials">Online / Offline (₹)</th><th *ngIf="canSeeFinancials">Payment received (₹)</th><th *ngIf="canSeeFinancials">Cost gap (₹)</th><th *ngIf="canSeeFinancials">Misc. expenses (₹)</th><th *ngIf="canSeeFinancials">Staff took (₹)</th><th *ngIf="canSeeFinancials">Staff share (₹)</th><th>Notes</th><th>Actions</th></tr></thead>
-            <tbody><tr *ngFor="let e of entries"><td>{{ e.entry_date | date:'d MMM yyyy' }}</td><td>{{ e.sold_large }}</td><td>{{ e.sold_small }}</td><td *ngIf="canSeeFinancials">{{ salesFor(e) | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.online_received | number:'1.0-0' }} / {{ e.offline_received | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ (e.online_received + e.offline_received) | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.cost_gap | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.miscellaneous_expenses | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.staff_paid_today | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.staff_share | number:'1.0-0' }}</td><td class="notes-cell">{{ e.notes || '—' }}</td><td><button class="link-btn" (click)="editEntry(e)">{{ canEditEntry(e) ? 'Open / edit' : 'Open' }}</button><button *ngIf="canEditEntry(e)" class="link-btn danger-link" [disabled]="busy" (click)="deleteEntry(e)">Delete</button></td></tr></tbody>
-            <tfoot><tr><th>Totals</th><th>{{ historyTotals.largeSold }}</th><th>{{ historyTotals.smallSold }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.sales | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.onlineReceived | number:'1.0-0' }} / {{ historyTotals.offlineReceived | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.payments | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.costGap | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.miscellaneousExpenses | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffTook | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffShare | number:'1.0-0' }}</th><th></th><th>{{ entries.length }} records</th></tr></tfoot>
+          <table id="historyTable"><thead><tr><th>Date</th><th>Opening stock (L / S)</th><th>Received (L / S)</th><th>Large sold</th><th>Small sold</th><th>Closing stock (L / S)</th><th *ngIf="canSeeFinancials">Sales (₹)</th><th *ngIf="canSeeFinancials">Online / Offline (₹)</th><th *ngIf="canSeeFinancials">Payment received (₹)</th><th *ngIf="canSeeFinancials">Cost gap (₹)</th><th *ngIf="canSeeFinancials">Misc. expenses (₹)</th><th *ngIf="canSeeFinancials">Staff took (₹)</th><th *ngIf="canSeeFinancials">Staff share (₹)</th><th>Notes</th><th>Actions</th></tr></thead>
+            <tbody><tr *ngFor="let e of entries"><td>{{ e.entry_date | date:'d MMM yyyy' }}</td><td class="numeric-cell">{{ e.opening_large | number:'1.0-0' }} / {{ e.opening_small | number:'1.0-0' }}</td><td class="numeric-cell">{{ e.received_large | number:'1.0-0' }} / {{ e.received_small | number:'1.0-0' }}</td><td>{{ e.sold_large }}</td><td>{{ e.sold_small }}</td><td class="numeric-cell">{{ e.closing_large | number:'1.0-0' }} / {{ e.closing_small | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ salesFor(e) | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.online_received | number:'1.0-0' }} / {{ e.offline_received | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ (e.online_received + e.offline_received) | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.cost_gap | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.miscellaneous_expenses | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.staff_paid_today | number:'1.0-0' }}</td><td *ngIf="canSeeFinancials">{{ e.staff_share | number:'1.0-0' }}</td><td class="notes-cell">{{ e.notes || '—' }}</td><td><button class="link-btn" (click)="editEntry(e)">{{ canEditEntry(e) ? 'Open / edit' : 'Open' }}</button><button *ngIf="canEditEntry(e)" class="link-btn danger-link" [disabled]="busy" (click)="deleteEntry(e)">Delete</button></td></tr></tbody>
+            <tfoot><tr><th>Totals</th><th></th><th class="numeric-cell">{{ historyTotals.receivedLarge | number:'1.0-0' }} / {{ historyTotals.receivedSmall | number:'1.0-0' }}</th><th>{{ historyTotals.largeSold }}</th><th>{{ historyTotals.smallSold }}</th><th></th><th *ngIf="canSeeFinancials">{{ historyTotals.sales | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.onlineReceived | number:'1.0-0' }} / {{ historyTotals.offlineReceived | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.payments | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.costGap | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.miscellaneousExpenses | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffTook | number:'1.0-0' }}</th><th *ngIf="canSeeFinancials">{{ historyTotals.staffShare | number:'1.0-0' }}</th><th></th><th>{{ entries.length }} records</th></tr></tfoot>
           </table>
         </div>
         <ng-template #noEntries><div class="empty-state">No entries found yet. Add your first daily entry.</div></ng-template>
@@ -431,8 +438,8 @@ export class AppComponent implements OnInit {
     const firstDate = this.entries.reduce((min, entry) => entry.entry_date < min ? entry.entry_date : min, this.entries[0].entry_date);
     return this.form.entry_date === firstDate;
   }
-  get historyTotals(): { largeSold:number; smallSold:number; sales:number; payments:number; onlineReceived:number; offlineReceived:number; costGap:number; miscellaneousExpenses:number; staffShare:number; staffTook:number } {
-    return this.entries.reduce((t,e)=>({largeSold:t.largeSold+Number(e.sold_large||0),smallSold:t.smallSold+Number(e.sold_small||0),sales:t.sales+this.salesFor(e),payments:t.payments+Number(e.online_received||0)+Number(e.offline_received||0),onlineReceived:t.onlineReceived+Number(e.online_received||0),offlineReceived:t.offlineReceived+Number(e.offline_received||0),costGap:t.costGap+Number(e.cost_gap||0),miscellaneousExpenses:t.miscellaneousExpenses+Number(e.miscellaneous_expenses||0),staffShare:t.staffShare+Number(e.staff_share||0),staffTook:t.staffTook+Number(e.staff_paid_today||0)}),{largeSold:0,smallSold:0,sales:0,payments:0,onlineReceived:0,offlineReceived:0,costGap:0,miscellaneousExpenses:0,staffShare:0,staffTook:0});
+  get historyTotals(): { largeSold:number; smallSold:number; receivedLarge:number; receivedSmall:number; sales:number; payments:number; onlineReceived:number; offlineReceived:number; costGap:number; miscellaneousExpenses:number; staffShare:number; staffTook:number } {
+    return this.entries.reduce((t,e)=>({largeSold:t.largeSold+Number(e.sold_large||0),smallSold:t.smallSold+Number(e.sold_small||0),receivedLarge:t.receivedLarge+Number(e.received_large||0),receivedSmall:t.receivedSmall+Number(e.received_small||0),sales:t.sales+this.salesFor(e),payments:t.payments+Number(e.online_received||0)+Number(e.offline_received||0),onlineReceived:t.onlineReceived+Number(e.online_received||0),offlineReceived:t.offlineReceived+Number(e.offline_received||0),costGap:t.costGap+Number(e.cost_gap||0),miscellaneousExpenses:t.miscellaneousExpenses+Number(e.miscellaneous_expenses||0),staffShare:t.staffShare+Number(e.staff_share||0),staffTook:t.staffTook+Number(e.staff_paid_today||0)}),{largeSold:0,smallSold:0,receivedLarge:0,receivedSmall:0,sales:0,payments:0,onlineReceived:0,offlineReceived:0,costGap:0,miscellaneousExpenses:0,staffShare:0,staffTook:0});
   }
   get isExistingRecord(): boolean { return !!this.editingEntryId; }
   get canManageUsers(): boolean { return this.role === 'admin' && !!this.vendorId; }
@@ -637,6 +644,8 @@ export class AppComponent implements OnInit {
   get isInvalidEntryDate(): boolean {
     return !this.form.entry_date || this.form.entry_date >= this.todayEntryDate;
   }
+  get calculatedClosingLarge(): number { return Math.max(0, Number(this.form.opening_large || 0) + Number(this.form.received_large || 0) - Number(this.form.sold_large || 0)); }
+  get calculatedClosingSmall(): number { return Math.max(0, Number(this.form.opening_small || 0) + Number(this.form.received_small || 0) - Number(this.form.sold_small || 0)); }
   private emptyEntry(): Entry {
     return { entry_date: this.todayEntryDate, opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, sold_large: 0, sold_small: 0, large_price: this.settings.large_price, small_price: this.settings.small_price, online_received: 0, offline_received: 0, cost_gap: 0, miscellaneous_expenses: 0, stock_purchase_paid: 0, staff_paid_today: 0, notes: '' };
   }
@@ -786,24 +795,91 @@ export class AppComponent implements OnInit {
   }
 
   private async suggestOpeningStock(): Promise<void> {
-    if (!this.user || !this.supabase || this.editingEntryId) return;
+    if (!this.user || !this.supabase || this.editingEntryId || !this.vendorId) return;
     const date = this.form.entry_date;
-    const { data, error } = await this.supabase
-      .from('daily_entries')
-      .select('entry_date,closing_large,closing_small')
-      .lt('entry_date', date)
-      .order('entry_date', { ascending: false })
-      .limit(1);
-    if (error) {
+    try {
+      const client = this.requireClient();
+      const [{ data: entries, error: entriesError }, { data: purchases, error: purchasesError }] = await Promise.all([
+        client.from('daily_entries').select('entry_date,opening_large,opening_small,received_large,received_small,sold_large,sold_small,closing_large,closing_small').eq('vendor_id', this.vendorId).lt('entry_date', date).order('entry_date', { ascending: true }),
+        client.from('stock_purchases').select('purchase_date,large_quantity,small_quantity').eq('vendor_id', this.vendorId).lte('purchase_date', date).order('purchase_date', { ascending: true })
+      ]);
+      if (entriesError) throw entriesError;
+      if (purchasesError) throw purchasesError;
+      const purchaseByDate = new Map<string, { large: number; small: number }>();
+      for (const purchase of purchases || []) {
+        const current = purchaseByDate.get(purchase.purchase_date) || { large: 0, small: 0 };
+        current.large += Number(purchase.large_quantity) || 0;
+        current.small += Number(purchase.small_quantity) || 0;
+        purchaseByDate.set(purchase.purchase_date, current);
+      }
+      const eventDates = new Set<string>([...(entries || []).map((entry: any) => entry.entry_date), ...purchaseByDate.keys()]);
+      const firstPurchaseDate = [...purchaseByDate.keys()].sort()[0];
+      let large = 0; let small = 0;
+      for (const eventDate of [...eventDates].sort()) {
+        if (!firstPurchaseDate || eventDate < firstPurchaseDate || eventDate >= date) continue;
+        const purchase = purchaseByDate.get(eventDate) || { large: 0, small: 0 };
+        const entry = (entries || []).find((item: any) => item.entry_date === eventDate) as any;
+        large = Math.max(0, large + purchase.large - (Number(entry?.['sold_large']) || 0));
+        small = Math.max(0, small + purchase.small - (Number(entry?.['sold_small']) || 0));
+      }
+      const todayPurchase = purchaseByDate.get(date) || { large: 0, small: 0 };
+      this.form.opening_large = Math.max(0, large);
+      this.form.opening_small = Math.max(0, small);
+      this.form.received_large = todayPurchase.large;
+      this.form.received_small = todayPurchase.small;
+      this.autoOpening = true;
+    } catch (error) {
       this.error = this.errMsg(error);
+    }
+  }
+
+  private async recalculateStockBalances(): Promise<void> {
+    if (!this.vendorId || !this.supabase) return;
+    const client = this.requireClient();
+    const [{ data: rows, error: entriesError }, { data: purchases, error: purchasesError }] = await Promise.all([
+      client.from('daily_entries').select('id,entry_date,sold_large,sold_small,opening_large,opening_small,received_large,received_small,closing_large,closing_small').eq('vendor_id', this.vendorId).order('entry_date', { ascending: true }),
+      client.from('stock_purchases').select('purchase_date,large_quantity,small_quantity').eq('vendor_id', this.vendorId).order('purchase_date', { ascending: true })
+    ]);
+    if (entriesError) throw entriesError;
+    if (purchasesError) throw purchasesError;
+    const entries = (rows || []) as Array<Record<string, any>>;
+    const purchaseByDate = new Map<string, { large: number; small: number }>();
+    for (const purchase of purchases || []) {
+      const current = purchaseByDate.get(purchase.purchase_date) || { large: 0, small: 0 };
+      current.large += Number(purchase.large_quantity) || 0;
+      current.small += Number(purchase.small_quantity) || 0;
+      purchaseByDate.set(purchase.purchase_date, current);
+    }
+    const firstPurchaseDate = [...purchaseByDate.keys()].sort()[0];
+    if (!firstPurchaseDate) {
+      for (const entry of entries) {
+        if (!entry['id']) continue;
+        const { error } = await client.from('daily_entries').update({ opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, closing_large: 0, closing_small: 0 }).eq('id', entry['id']).eq('vendor_id', this.vendorId);
+        if (error) throw error;
+        Object.assign(entry, { opening_large: 0, opening_small: 0, received_large: 0, received_small: 0, closing_large: 0, closing_small: 0 });
+      }
       return;
     }
-    if (data?.length) {
-      this.form.opening_large = Number(data[0]['closing_large'] || 0);
-      this.form.opening_small = Number(data[0]['closing_small'] || 0);
-      this.autoOpening = true;
-    } else {
-      this.autoOpening = false;
+    const entryByDate = new Map<string, Record<string, any>>(entries.map(entry => [String(entry['entry_date']), entry]));
+    const eventDates = [...new Set([...entryByDate.keys(), ...purchaseByDate.keys()])].filter(date => date >= firstPurchaseDate).sort();
+    let large = 0; let small = 0;
+    for (const date of eventDates) {
+      const purchase = purchaseByDate.get(date) || { large: 0, small: 0 };
+      const entry = entryByDate.get(date);
+      const openingLarge = large;
+      const openingSmall = small;
+      const receivedLarge = purchase.large;
+      const receivedSmall = purchase.small;
+      const soldLarge = Number(entry?.['sold_large']) || 0;
+      const soldSmall = Number(entry?.['sold_small']) || 0;
+      large = Math.max(0, openingLarge + receivedLarge - soldLarge);
+      small = Math.max(0, openingSmall + receivedSmall - soldSmall);
+      if (entry && entry['id']) {
+        const payload = { opening_large: openingLarge, opening_small: openingSmall, received_large: receivedLarge, received_small: receivedSmall, closing_large: Math.max(0, large), closing_small: Math.max(0, small) };
+        const { error } = await client.from('daily_entries').update(payload).eq('id', entry['id']).eq('vendor_id', this.vendorId);
+        if (error) throw error;
+        Object.assign(entry, payload);
+      }
     }
   }
   async saveEntry(): Promise<void> {
@@ -820,9 +896,9 @@ export class AppComponent implements OnInit {
       const corePayload = {
         vendor_id: this.vendorId,
         entry_date: this.form.entry_date,
-        opening_large: 0, opening_small: 0, received_large: 0, received_small: 0,
+        opening_large: Number(this.form.opening_large || 0), opening_small: Number(this.form.opening_small || 0), received_large: Number(this.form.received_large || 0), received_small: Number(this.form.received_small || 0),
         sold_large: Number(this.form.sold_large || 0),
-        sold_small: Number(this.form.sold_small || 0), closing_large: 0, closing_small: 0,
+        sold_small: Number(this.form.sold_small || 0), closing_large: this.calculatedClosingLarge, closing_small: this.calculatedClosingSmall,
         notes: this.form.notes || '',
         updated_by: this.user?.id,
       };
@@ -896,6 +972,7 @@ export class AppComponent implements OnInit {
       }
 
       const savedDate = this.form.entry_date;
+      await this.recalculateStockBalances();
       await this.loadEntries();
       await this.loadEntryForDate(savedDate);
       this.activeTab = 'overview';
@@ -959,6 +1036,8 @@ export class AppComponent implements OnInit {
       }
       this.message = this.editingStockPurchaseId ? 'Stock purchase updated successfully.' : 'Stock purchase saved. Total cost is calculated from the Large and Small quantities and their unit prices.';
       this.resetStockPurchaseDraft();
+      await this.recalculateStockBalances();
+      await this.loadEntries();
       await this.loadStockPurchases();
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e);
@@ -973,7 +1052,7 @@ export class AppComponent implements OnInit {
   async deleteStockPurchase(purchase: StockPurchase): Promise<void> {
     if (!purchase.id || !this.vendorId) return;
     if (!confirm(`Delete stock purchase on ${purchase.purchase_date}?`)) return;
-    this.busy = true; try { const { error } = await this.requireClient().from('stock_purchases').delete().eq('id', purchase.id).eq('vendor_id', this.vendorId); if (error) throw error; await this.loadStockPurchases(); this.message = 'Stock purchase deleted.'; } catch (e) { this.error = this.errMsg(e); } finally { this.busy = false; }
+    this.busy = true; try { const { error } = await this.requireClient().from('stock_purchases').delete().eq('id', purchase.id).eq('vendor_id', this.vendorId); if (error) throw error; await this.recalculateStockBalances(); await this.loadEntries(); await this.loadStockPurchases(); this.message = 'Stock purchase deleted.'; } catch (e) { this.error = this.errMsg(e); } finally { this.busy = false; }
   }
 
   async loadEntries(): Promise<void> {
@@ -1018,6 +1097,7 @@ export class AppComponent implements OnInit {
       if (financialError && !/does not exist|relation.*daily_financials/i.test(financialError.message || '')) throw financialError;
       const { error } = await client.from('daily_entries').delete().eq('id', e.id);
       if (error) throw error;
+      await this.recalculateStockBalances();
       this.message = `Daily entry for ${e.entry_date} was deleted.`;
       await this.loadEntries();
     } catch (err) { this.error = this.errMsg(err); }
