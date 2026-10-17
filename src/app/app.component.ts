@@ -105,15 +105,15 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
                 <svg *ngIf="overviewTrendChartType === 'bar'; else overviewBarIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18 8 12l4 3 7-9 2 2M3 21h18" /></svg>
                 <ng-template #overviewBarIcon><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V11h4v8M10 19V5h4v14M16 19v-6h4v6M3 21h18" /></svg></ng-template>
               </button>
-              <svg class="clear-chart" viewBox="0 0 640 260" role="img" aria-label="Sales trend chart" preserveAspectRatio="none">
-                <line *ngFor="let y of chartGridY" x1="92" x2="625" [attr.y1]="y" [attr.y2]="y" class="chart-grid-line"></line>
-                <line x1="92" y1="35" x2="92" y2="185" class="chart-axis-line"></line><line x1="92" y1="185" x2="625" y2="185" class="chart-axis-line"></line>
-                <text *ngFor="let y of chartGridY" x="80" [attr.y]="y + 4" text-anchor="end" class="chart-axis-label">{{ overviewChartAxisLabel(y) }}</text>
+              <svg class="clear-chart" viewBox="0 0 640 280" role="img" aria-label="Sales trend chart" preserveAspectRatio="none">
+                <line *ngFor="let y of chartGridY" x1="68" x2="625" [attr.y1]="y" [attr.y2]="y" class="chart-grid-line"></line>
+                <line x1="68" y1="35" x2="68" y2="185" class="chart-axis-line"></line><line x1="68" y1="185" x2="625" y2="185" class="chart-axis-line"></line>
+                <text *ngFor="let y of chartGridY" x="56" [attr.y]="y === 185 ? y - 4 : y + 4" text-anchor="end" class="chart-axis-label">{{ overviewChartAxisLabel(y) }}</text>
                 <ng-container *ngIf="overviewTrendChartType === 'bar'; else overviewTrendLine">
-                  <rect *ngFor="let day of overviewTrend; let i = index" [attr.x]="chartBarX(i, overviewTrend.length)" [attr.y]="chartBarY(day.sales, overviewChartMax)" [attr.width]="chartBarWidth(overviewTrend.length)" [attr.height]="chartBarHeight(day.sales, overviewChartMax)" rx="1" class="chart-bar sales-bar"><title>{{ day.label }} sales: {{ day.sales | currency:'INR':'symbol':'1.0-0' }}</title></rect>
+                  <rect *ngFor="let day of overviewTrend; let i = index" [attr.x]="chartBarX(i, overviewTrend.length)" [attr.y]="chartBarY(day.sales, overviewChartMax)" [attr.width]="chartBarWidth(overviewTrend.length, 0.30)" [attr.height]="chartBarHeight(day.sales, overviewChartMax)" rx="1" class="chart-bar sales-bar"><title>{{ day.label }} sales: {{ day.sales | currency:'INR':'symbol':'1.0-0' }}</title></rect>
                 </ng-container>
                 <ng-template #overviewTrendLine><polyline [attr.points]="overviewLinePoints()" class="chart-line sales-line"><title>Sales trend</title></polyline><circle *ngFor="let day of overviewTrend; let i = index" [attr.cx]="chartPointX(i, overviewTrend.length)" [attr.cy]="chartPointY(day.sales, overviewChartMax)" r="2" class="chart-point sales-point"><title>{{ day.label }} sales: {{ day.sales | currency:'INR':'symbol':'1.0-0' }}</title></circle></ng-template>
-                <text *ngFor="let day of overviewTrend; let i = index" [attr.x]="chartPointX(i, overviewTrend.length)" y="218" text-anchor="middle" class="chart-date-label" [attr.transform]="'rotate(-90 ' + chartPointX(i, overviewTrend.length) + ' 218)'">{{ shortChartDate(day.label) }}</text>
+                <text *ngFor="let day of overviewTrend; let i = index" [attr.x]="chartPointX(i, overviewTrend.length)" y="230" text-anchor="middle" class="chart-date-label" [attr.transform]="'rotate(-90 ' + chartPointX(i, overviewTrend.length) + ' 230)'">{{ shortChartDate(day.label) }}</text>
               </svg>
             </div>
             <ng-template #noOverviewTrend><div class="empty-state compact">No sales entries for this period yet.</div></ng-template>
@@ -250,16 +250,16 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
                 <svg *ngIf="reportChartType === 'bar'; else reportBarIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18 8 12l4 3 7-9 2 2M3 21h18" /></svg>
                 <ng-template #reportBarIcon><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V11h4v8M10 19V5h4v14M16 19v-6h4v6M3 21h18" /></svg></ng-template>
               </button>
-              <svg class="clear-chart" viewBox="0 0 640 260" role="img" aria-label="Sales and payments chart" preserveAspectRatio="none">
-                <line *ngFor="let y of chartGridY" x1="92" x2="625" [attr.y1]="y" [attr.y2]="y" class="chart-grid-line"></line>
-                <line x1="92" y1="35" x2="92" y2="185" class="chart-axis-line"></line><line x1="92" y1="185" x2="625" y2="185" class="chart-axis-line"></line>
-                <text *ngFor="let y of chartGridY" x="80" [attr.y]="y + 4" text-anchor="end" class="chart-axis-label">{{ chartAxisLabel(y) }}</text>
+              <svg class="clear-chart" viewBox="0 0 640 280" role="img" aria-label="Sales and payments chart" preserveAspectRatio="none">
+                <line *ngFor="let y of chartGridY" x1="68" x2="625" [attr.y1]="y" [attr.y2]="y" class="chart-grid-line"></line>
+                <line x1="68" y1="35" x2="68" y2="185" class="chart-axis-line"></line><line x1="68" y1="185" x2="625" y2="185" class="chart-axis-line"></line>
+                <text *ngFor="let y of chartGridY" x="56" [attr.y]="y === 185 ? y - 4 : y + 4" text-anchor="end" class="chart-axis-label">{{ chartAxisLabel(y) }}</text>
                 <ng-container *ngIf="reportChartType === 'bar'; else reportTrendLine">
                   <rect *ngFor="let day of reportDailySeries; let i = index" [attr.x]="chartBarX(i, reportDailySeries.length, -0.5)" [attr.y]="chartBarY(day.sales, reportChartMax)" [attr.width]="chartBarWidth(reportDailySeries.length, 0.30)" [attr.height]="chartBarHeight(day.sales, reportChartMax)" rx="1" class="chart-bar sales-bar"><title>{{ day.label }} sales: {{ day.sales | currency:'INR':'symbol':'1.0-0' }}</title></rect>
                   <rect *ngFor="let day of reportDailySeries; let i = index" [attr.x]="chartBarX(i, reportDailySeries.length, 0.5)" [attr.y]="chartBarY(day.payments, reportChartMax)" [attr.width]="chartBarWidth(reportDailySeries.length, 0.30)" [attr.height]="chartBarHeight(day.payments, reportChartMax)" rx="1" class="chart-bar payments-bar"><title>{{ day.label }} payments: {{ day.payments | currency:'INR':'symbol':'1.0-0' }}</title></rect>
                 </ng-container>
                 <ng-template #reportTrendLine><polyline [attr.points]="chartLinePoints('sales')" class="chart-line sales-line"></polyline><polyline [attr.points]="chartLinePoints('payments')" class="chart-line payments-line"></polyline><circle *ngFor="let day of reportDailySeries; let i = index" [attr.cx]="chartPointX(i, reportDailySeries.length)" [attr.cy]="chartPointY(day.sales, reportChartMax)" r="2" class="chart-point sales-point"><title>{{ day.label }} sales: {{ day.sales | currency:'INR':'symbol':'1.0-0' }}</title></circle><circle *ngFor="let day of reportDailySeries; let i = index" [attr.cx]="chartPointX(i, reportDailySeries.length)" [attr.cy]="chartPointY(day.payments, reportChartMax)" r="2" class="chart-point payments-point"><title>{{ day.label }} payments: {{ day.payments | currency:'INR':'symbol':'1.0-0' }}</title></circle></ng-template>
-                <text *ngFor="let day of reportDailySeries; let i = index" [attr.x]="chartPointX(i, reportDailySeries.length)" y="218" text-anchor="middle" class="chart-date-label" [attr.transform]="'rotate(-90 ' + chartPointX(i, reportDailySeries.length) + ' 218)'">{{ shortChartDate(day.label) }}</text>
+                <text *ngFor="let day of reportDailySeries; let i = index" [attr.x]="chartPointX(i, reportDailySeries.length)" y="230" text-anchor="middle" class="chart-date-label" [attr.transform]="'rotate(-90 ' + chartPointX(i, reportDailySeries.length) + ' 230)'">{{ shortChartDate(day.label) }}</text>
               </svg>
             </div>
             <ng-template #noReportDays><div class="empty-state compact">No entries for the selected period.</div></ng-template>
@@ -639,9 +639,9 @@ export class AppComponent implements OnInit {
   private chartAxisText(value:number): string { if (value <= 0) return '₹0'; if (value >= 1000) return '₹' + (value/1000).toLocaleString('en-IN',{maximumFractionDigits:1}) + 'k'; return '₹' + Math.round(value).toLocaleString('en-IN'); }
   overviewChartAxisLabel(y:number): string { return this.chartAxisText(this.overviewChartMax * Math.max(0, (185-y)/150)); }
   chartAxisLabel(y:number): string { return this.chartAxisText(this.reportChartMax * Math.max(0, (185-y)/150)); }
-  chartPointX(index:number,count:number):number { const left=106, right=612; return count<=1?((left+right)/2):left+(index*(right-left)/(count-1)); }
+  chartPointX(index:number,count:number):number { const left=84, right=608; return count<=1?((left+right)/2):left+(index*(right-left)/(count-1)); }
   chartPointY(value:number,max:number):number { return 185-(Math.max(0,value)/Math.max(1,max))*150; }
-  chartBarWidth(count:number, fraction:number = 0.24):number { const slot = 533 / Math.max(1,count); return Math.max(0.9, Math.min(1.8, slot * fraction)); }
+  chartBarWidth(count:number, fraction:number = 0.24):number { const slot = 500 / Math.max(1,count); return Math.max(1.2, Math.min(3.2, slot * Math.max(fraction, 0.34))); }
   shortChartDate(label:string):string { return String(label || '').replace(/\b(\d{4})$/, year => year.slice(-2)); }
   chartBarX(index:number,count:number, offset:number = 0):number { const x = this.chartPointX(index,count); const width = this.chartBarWidth(count); return x + (offset === 0 ? -width/2 : offset * width) - (offset === 0 ? 0 : width/2); }
   chartBarY(value:number,max:number):number { return this.chartPointY(value,max); }
