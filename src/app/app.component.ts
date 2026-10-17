@@ -198,6 +198,8 @@ interface FixedCost { id: string; vendor_id: string; name: string; amount: numbe
         <div class="section-heading"><div><div class="eyebrow">BUSINESS PERFORMANCE</div><h3>Reports <span class="heading-date-range">({{ selectedPeriodDescription('report') }})</span></h3></div><div class="period-controls"><label>Show<select [(ngModel)]="reportPreset" (ngModelChange)="onReportPeriodChange()"><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="last7">Last 7 days</option><option value="currentMonth">Current month</option><option value="lastMonth">Last month</option><option value="last3Months">Last 3 months</option><option value="last6Months">Last 6 months</option><option value="currentYear">Current year</option><option value="lastYear">Last year</option><option value="custom">Custom date range</option></select></label><ng-container *ngIf="reportPreset==='custom'"><label>From<input type="date" [(ngModel)]="reportStart" (ngModelChange)="onReportDateChange()" aria-label="Start date for report"></label><label>To<input type="date" [(ngModel)]="reportEnd" (ngModelChange)="onReportDateChange()" aria-label="End date for report"></label></ng-container><button type="button" class="btn btn-secondary period-reset" (click)="resetPeriod('report')">Reset</button></div></div>
         <div class="stats-grid">
           <article class="stat"><span>Total sales</span><strong>{{ report.sales | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+          <article class="stat"><span>Average daily sales</span><strong>{{ reportAverageDailySales | currency:'INR':'symbol':'1.0-0' }}</strong><small>Average across the selected calendar days</small></article>
+          <article class="stat"><span>Average daily take home</span><strong>{{ reportAverageDailyTakeHome | currency:'INR':'symbol':'1.0-0' }}</strong><small>Estimated pocket profit divided by selected calendar days</small></article>
           <article class="stat"><span>Stock purchases paid</span><strong>{{ report.stock | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Staff share earned</span><strong>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</strong></article>
           <article class="stat"><span>Online payments</span><strong>{{ reportOnlinePayments | currency:'INR':'symbol':'1.0-0' }}</strong></article>
@@ -489,6 +491,14 @@ export class AppComponent implements OnInit {
   get totalPayments(): number { return this.entriesForSelection('overview').reduce((sum, e) => sum + Number(e.online_received || 0) + Number(e.offline_received || 0), 0); }
   get pocketProfit(): number { const list = this.entriesForSelection('overview'); return list.reduce((sum, e) => sum + this.salesFor(e) - Number(e.stock_purchase_paid || 0) - Number(e.staff_share || 0) - Number(e.cost_gap || 0) - Number(e.miscellaneous_expenses || 0), 0) - this.fixedCostForSelection('overview'); }
   get reportFixedCost(): number { return this.fixedCostForSelection('report'); }
+  private get reportSelectedCalendarDays(): number {
+    const range = this.selectedRange(this.reportPreset, this.reportDate, this.reportStart, this.reportEnd);
+    const start = new Date(range.start + 'T12:00:00');
+    const end = new Date(range.end + 'T12:00:00');
+    return Math.max(1, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1);
+  }
+  get reportAverageDailySales(): number { return this.report.sales / this.reportSelectedCalendarDays; }
+  get reportAverageDailyTakeHome(): number { return this.reportProfit / this.reportSelectedCalendarDays; }
   private fixedCostForPeriod(period: 'daily' | 'weekly' | 'monthly' | 'yearly', dateText: string): number {
     const range = this.rangeFor(period, dateText); let total = 0;
     const cursor = new Date(range.start + 'T12:00:00'); const end = new Date(range.end + 'T12:00:00');
