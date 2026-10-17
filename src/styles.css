@@ -24,7 +24,7 @@
 
 .key-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0}
 
-.sales-dot{background:#ea580c}.payments-dot{background:#1677FF}.large-dot{background:#ea580c}.small-dot{background:#fdba74}
+.sales-dot{background:#ea580c}.payments-dot{background:#7c9b8e}.large-dot{background:#ea580c}.small-dot{background:#fdba74}
 
 .bar-chart{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:end;min-height:180px;padding-top:8px}
 
@@ -70,11 +70,11 @@
 
 .chart-line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 
-.sales-line{stroke:#ea580c}.payments-line{stroke:#1677FF}
+.sales-line{stroke:#ea580c}.payments-line{stroke:#7c9b8e}
 
 .chart-point{stroke:#fffdfb;stroke-width:1.5;vector-effect:non-scaling-stroke}
 
-.sales-point{fill:#ea580c}.payments-point{fill:#1677FF}
+.sales-point{fill:#ea580c}.payments-point{fill:#7c9b8e}
 
 .line-chart-labels{display:flex;justify-content:space-between;gap:4px;overflow:hidden;margin:0 8px 0 32px}
 
@@ -386,23 +386,16 @@ html.dark-mode .heading-date-range { color: #9ca3af; }
 .table-export-btn span[aria-hidden="true"] { font-size: 17px; line-height: 1; }
 html.dark-mode .table-export-btn { background: #292524; border-color: #57534e; color: #fed7aa; }
 html.dark-mode .table-export-btn:hover { background: #3b2b1f; border-color: #9a3412; }
-.table-export-icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 7px; border: 1px solid #f3c89f; border-radius: 9px; background: #fffaf4; color: #b45309; cursor: pointer; transition: background .15s ease, border-color .15s ease, transform .15s ease; }
-.table-export-icon svg { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.table-export-icon:hover { background: #ffedd5; border-color: #fb923c; transform: translateY(-1px); }
-.table-export-icon.pdf-export-icon { color: #dc2626; }
-html.dark-mode .table-export-icon { background: #292524; border-color: #57534e; color: #86efac; }
-html.dark-mode .table-export-icon.pdf-export-icon { color: #fca5a5; }
-html.dark-mode .table-export-icon:hover { background: #3b2b1f; border-color: #9a3412; }
-@media (max-width: 600px) { .table-export-toolbar { margin-bottom: 8px; } .table-export-icon { width: 34px; height: 34px; padding: 6px; } }
+@media (max-width: 600px) { .table-export-toolbar { margin-bottom: 8px; } .table-export-btn { padding: 7px 10px; } }
 
 
 /* Right-align numeric and money columns in all business tables (including headers and totals). */
 #overviewTable th:nth-child(n+2), #overviewTable td:nth-child(n+2),
-#historyTable th:nth-child(n+2):nth-child(-n+11), #historyTable td:nth-child(n+2):nth-child(-n+11),
+#historyTable th:nth-child(n+2):nth-child(-n+12), #historyTable td:nth-child(n+2):nth-child(-n+12),
 #reportTable th:nth-child(n+2), #reportTable td:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
 /* Keep descriptive/action columns left-aligned in entry history. */
-#historyTable th:nth-child(12), #historyTable td:nth-child(12),
-#historyTable th:nth-child(13), #historyTable td:nth-child(13) { text-align: left; }
+#historyTable th:nth-child(13), #historyTable td:nth-child(13),
+#historyTable th:nth-child(14), #historyTable td:nth-child(14) { text-align: left; }
 
 /* Stock purchase form/export spacing and totals row */
 .stock-purchase-actions { margin-bottom: 14px; }
@@ -418,14 +411,14 @@ html.dark-mode #stockPurchaseTable tfoot th { background: #1f2937; color: #e5e7e
 
 /* Clean, consistent charts for Sales Trend and Sales vs Payments */
 .chart-canvas { position: relative; width: 100%; min-width: 0; padding-top: 2px; }
-.clear-chart { display: block; width: 100%; height: 280px; overflow: visible; }
+.clear-chart { display: block; width: 100%; height: 260px; overflow: visible; }
 .chart-view-toggle { position: absolute; z-index: 2; top: 7px; right: 8px; display: grid; place-items: center; width: 30px; height: 30px; padding: 5px; border: 1px solid #f2ddc8; border-radius: 7px; background: #fffaf5; color: #9a3412; cursor: pointer; }
 .chart-view-toggle:hover { background: #ffedd5; border-color: #fdba74; }
 .chart-view-toggle:focus-visible { outline: 2px solid #ea580c; outline-offset: 2px; }
 .chart-view-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .chart-bar { vector-effect: non-scaling-stroke; }
 .sales-bar { fill: #ea580c; }
-.payments-bar { fill: #1677FF; }
+.payments-bar { fill: #7c9b8e; }
 .chart-line { stroke-width: 1.35 !important; stroke-linecap: round; stroke-linejoin: round; }
 .chart-point { stroke-width: 0.8 !important; }
 .chart-axis-label { fill: #654b3d; font: 10px 'DM Sans', sans-serif; font-weight: 600; }
@@ -435,7 +428,7 @@ html.dark-mode .chart-view-toggle { background: #111827; color: #fdba74; border-
 html.dark-mode .chart-axis-label { fill: #d1d5db; }
 html.dark-mode .chart-axis-line { stroke: #6b7280; }
 html.dark-mode .chart-grid-line { stroke: #374151; }
-@media (max-width: 560px) { .clear-chart { height: 265px; } .chart-view-toggle { top: 5px; right: 4px; width: 27px; height: 27px; } .chart-axis-label { font-size: 9px; } }
+@media (max-width: 560px) { .clear-chart { height: 245px; } .chart-view-toggle { top: 5px; right: 4px; width: 27px; height: 27px; } .chart-axis-label { font-size: 9px; } }
 
 
 /* Mobile-friendly chart polish: thinner bars, top-right toggle, compact date labels. */
@@ -449,7 +442,7 @@ html.dark-mode .chart-grid-line { stroke: #374151; }
   .chart-view-toggle { top: 12px; right: 12px; width: 27px; height: 27px; }
   .visual-card:has(.chart-view-toggle) .visual-heading { padding-right: 36px; }
   .chart-date-label { font-size: 9px; }
-  .clear-chart { height: 265px; }
+  .clear-chart { height: 245px; }
 }
 
 
@@ -457,7 +450,7 @@ html.dark-mode .chart-grid-line { stroke: #374151; }
 .chart-date-label { dominant-baseline: middle; }
 @media (max-width: 560px) {
   .chart-date-label { font-size: 8px; }
-  .clear-chart { height: 265px; }
+  .clear-chart { height: 245px; }
 }
 
 /* Chart readability refinement: slightly wider bars and darker axis labels. */
@@ -466,25 +459,60 @@ html.dark-mode .chart-grid-line { stroke: #374151; }
 html.dark-mode .chart-axis-label { fill: #d1d5db; }
 html.dark-mode .chart-date-label { fill: #d1d5db; }
 
-/* Keep merged history-table notes and action controls left-aligned after compacting columns. */
-#historyTable .notes-cell, #historyTable td:last-child { text-align: left !important; }
+
+/* Period performance table: preserve column widths on phones and separate columns clearly. */
+.overview-table-card .table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.overview-table-card .period-performance-table { width: 100%; min-width: 640px; table-layout: auto; border-collapse: collapse; }
+.overview-table-card .period-performance-table th,
+.overview-table-card .period-performance-table td { border-right: 1px solid #efd8c5; }
+.overview-table-card .period-performance-table th:last-child,
+.overview-table-card .period-performance-table td:last-child { border-right: 0; }
+.overview-table-card .period-performance-table th:nth-child(n+2),
+.overview-table-card .period-performance-table td:nth-child(n+2) { text-align: right; }
+.overview-table-card .period-performance-table th:first-child,
+.overview-table-card .period-performance-table td:first-child { text-align: left; min-width: 112px; }
+@media (max-width: 560px) {
+  .overview-table-card .period-performance-table { min-width: 640px; }
+  .overview-table-card .period-performance-table th,
+  .overview-table-card .period-performance-table td { padding: 11px 10px; }
+}
 
 
-/* Period performance table: narrow date/sold columns; highlight only positive differences. */
-#overviewTable { table-layout: fixed; }
-#overviewTable th:nth-child(1), #overviewTable td:nth-child(1) { width: 12%; }
-#overviewTable th:nth-child(2), #overviewTable td:nth-child(2) { width: 16%; }
-#overviewTable th:nth-child(3), #overviewTable td:nth-child(3) { width: 22%; }
-#overviewTable th:nth-child(4), #overviewTable td:nth-child(4) { width: 25%; }
-#overviewTable th:nth-child(5), #overviewTable td:nth-child(5) { width: 25%; }
-#overviewTable .difference-positive { color: #dc2626; font-weight: 700; }
-html.dark-mode #overviewTable .difference-positive { color: #f87171; }
+/* Shared table system: consistent separators, scrolling, and readable numeric cells across tabs. */
+.shared-data-table { border-collapse: collapse; width: 100%; }
+.shared-data-table th, .shared-data-table td { border-right: 1px solid #efd8c5; }
+.shared-data-table th:last-child, .shared-data-table td:last-child { border-right: 0; }
+.shared-data-table th { white-space: nowrap; }
+.shared-data-table td { vertical-align: top; }
+html.dark-mode .shared-data-table th, html.dark-mode .shared-data-table td { border-right-color: #44403c; }
 
+/* Visible, reusable icon-only export buttons (the SVGs previously had no shared stroke styling). */
+.table-export-icon { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; padding: 9px; border: 1px solid #f3c89f; border-radius: 10px; background: #fffaf4; color: #c2410c; cursor: pointer; flex: 0 0 auto; transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+.table-export-icon svg { display: block; width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.table-export-icon:hover { background: #ffedd5; border-color: #f97316; }
+.table-export-icon:focus-visible { outline: 2px solid #1677ff; outline-offset: 2px; }
+.table-export-icon.pdf-export-icon { color: #b91c1c; }
+html.dark-mode .table-export-icon { background: #292524; border-color: #57534e; color: #fdba74; }
+html.dark-mode .table-export-icon.pdf-export-icon { color: #fca5a5; }
+html.dark-mode .table-export-icon:hover { background: #3b2b1f; border-color: #9a3412; }
+@media (max-width: 600px) { .table-export-icon { width: 38px; height: 38px; padding: 8px; } .table-export-icon svg { width: 20px; height: 20px; } }
 
-/* Daily entry history: numeric alignment, fixed wrapping notes, and compact actions. */
-#historyTable { table-layout: auto; width: 100%; }
-#historyTable th.numeric-cell, #historyTable td.numeric-cell { text-align: right !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
-#historyTable th:first-child, #historyTable td:first-child { text-align: left; white-space: nowrap; }
-#historyTable th:nth-last-child(2), #historyTable td.notes-cell { width: 180px; min-width: 180px; max-width: 180px; white-space: normal; overflow-wrap: anywhere; word-break: normal; line-height: 1.35; text-align: left !important; }
-#historyTable th:last-child, #historyTable td:last-child { white-space: nowrap; text-align: left !important; }
-#historyTable .numeric-cell { padding-left: 8px; padding-right: 8px; }
+/* Fixed-width Notes column exception; long notes wrap instead of widening the table. */
+.shared-data-table th.notes-column,
+.shared-data-table td.notes-cell {
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* Shared reusable export controls are rendered consistently in every table. */
+.shared-table-export-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
