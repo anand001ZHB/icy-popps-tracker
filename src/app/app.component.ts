@@ -238,7 +238,7 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
               <article class="stat"><span>Total payment rcvd</span><strong>{{ reportPayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Online payments + offline payments</small></article>
               <article class="stat"><span>Online payments</span><strong>{{ reportOnlinePayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sum of online payments in this period</small></article>
               <article class="stat"><span>Offline payments</span><strong>{{ reportOfflinePayments | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sum of offline payments in this period</small></article>
-              <article class="stat highlight"><span>Net profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales − (staff share + cost gap + Misc + fixed cost)</small></article>
+              <article class="stat highlight"><span>Net profit</span><strong>{{ reportProfit | currency:'INR':'symbol':'1.0-0' }}</strong><small>Sales − (product cost + staff share + cost gap + Misc + fixed cost)</small></article>
             </div>
           </div>
           <div class="report-metric-group report-daily-metrics">
@@ -251,6 +251,7 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
           <div class="report-metric-group report-cost-metrics">
             <h4>Costs and expenses</h4>
             <div class="report-metric-grid report-metric-grid-four">
+              <article class="stat"><span>Product cost</span><strong>{{ report.productCost | currency:'INR':'symbol':'1.0-0' }}</strong><small>Large units sold × ₹15 + small units sold × ₹8</small></article>
               <article class="stat"><span>Cost gap</span><strong>{{ report.gap | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total sales − Total payment rcvd</small></article>
               <article class="stat"><span>Misc</span><strong>{{ report.misc | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total miscellaneous expenses recorded</small></article>
               <article class="stat"><span>Fixed cost</span><strong>{{ reportFixedCost | currency:'INR':'symbol':'1.0-0' }}</strong><small>{{ activeFixedCostCount }} active cost items · {{ selectedPeriodDescription('report') }}</small></article>
@@ -303,13 +304,13 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
           <div class="visual-heading"><div><h4>Period report table</h4><p>Sales, collections, and estimated profit after fixed expenses for each period</p></div></div>
           <app-table-export-controls *ngIf="reportDailySeries.length" ariaLabel="Export period report table" (excelClick)="downloadTableExcel('reportTable', 'icy-popps-reports')" (pdfClick)="downloadTablePdf('reportTable', 'Icy Popps - Reports')"></app-table-export-controls>
           <div class="table-wrap" *ngIf="reportDailySeries.length; else noReportTable">
-            <table id="reportTable" class="shared-data-table"><thead><tr><th>Period</th><th>Sales L/S (₹)</th><th>Total sales (₹)</th><th>Payment rcvd (₹)</th><th>Cost gap (₹)</th><th>Staff share (₹)</th><th>Misc (₹)</th><th>Fixed cost (₹)</th><th>Net profit (₹)</th></tr></thead>
+            <table id="reportTable" class="shared-data-table"><thead><tr><th>Period</th><th>Sales L/S (₹)</th><th>Total sales (₹)</th><th>Payment rcvd (₹)</th><th>Product cost (₹)</th><th>Cost gap (₹)</th><th>Staff share (₹)</th><th>Misc (₹)</th><th>Fixed cost (₹)</th><th>Net profit (₹)</th></tr></thead>
               <tbody><tr *ngFor="let day of reportTableRows">
                 <td>{{ day.label }}</td><td>{{ day.largeSales | number:'1.0-0' }} / {{ day.smallSales | number:'1.0-0' }}</td>
-                <td>{{ day.sales | number:'1.0-0' }}</td><td>{{ day.payments | number:'1.0-0' }}</td><td>{{ day.costGap | number:'1.0-0' }}</td><td>{{ day.staffShare | number:'1.0-0' }}</td><td>{{ day.miscCosts | number:'1.0-0' }}</td><td>{{ day.fixedCost | number:'1.0-0' }}</td>
+                <td>{{ day.sales | number:'1.0-0' }}</td><td>{{ day.payments | number:'1.0-0' }}</td><td>{{ day.productCost | number:'1.0-0' }}</td><td>{{ day.costGap | number:'1.0-0' }}</td><td>{{ day.staffShare | number:'1.0-0' }}</td><td>{{ day.miscCosts | number:'1.0-0' }}</td><td>{{ day.fixedCost | number:'1.0-0' }}</td>
                 <td><span [class.positive-value]="day.net >= 0" [class.negative-value]="day.net < 0">{{ day.net | number:'1.0-0' }}</span></td>
               </tr></tbody>
-              <tfoot><tr><th>Total</th><th>{{ reportLargeSalesTotal | number:'1.0-0' }} / {{ reportSmallSalesTotal | number:'1.0-0' }}</th><th>{{ report.sales | number:'1.0-0' }}</th><th>{{ reportPayments | number:'1.0-0' }}</th><th>{{ report.gap | number:'1.0-0' }}</th><th>{{ report.staff | number:'1.0-0' }}</th><th>{{ report.misc | number:'1.0-0' }}</th><th>{{ reportFixedCost | number:'1.0-0' }}</th><th>{{ reportProfit | number:'1.0-0' }}</th></tr></tfoot>
+              <tfoot><tr><th>Total</th><th>{{ reportLargeSalesTotal | number:'1.0-0' }} / {{ reportSmallSalesTotal | number:'1.0-0' }}</th><th>{{ report.sales | number:'1.0-0' }}</th><th>{{ reportPayments | number:'1.0-0' }}</th><th>{{ report.productCost | number:'1.0-0' }}</th><th>{{ report.gap | number:'1.0-0' }}</th><th>{{ report.staff | number:'1.0-0' }}</th><th>{{ report.misc | number:'1.0-0' }}</th><th>{{ reportFixedCost | number:'1.0-0' }}</th><th>{{ reportProfit | number:'1.0-0' }}</th></tr></tfoot>
             </table>
           </div>
           <ng-template #noReportTable><div class="empty-state compact">No records found for the selected period.</div></ng-template>
@@ -426,7 +427,7 @@ export class AppComponent implements OnInit {
   userIdToUpdate = '';
   roleToAssign: Role = 'staff';
   reportMonth = new Date().toISOString().slice(0, 7);
-  report = { sales: 0, staff: 0, gap: 0, misc: 0, paid: 0 };
+  report = { sales: 0, staff: 0, gap: 0, misc: 0, productCost: 0, paid: 0 };
   stockPurchases: StockPurchase[] = [];
   editingStockPurchaseId: string | null = null;
   stockPurchaseDraft: StockPurchase = this.emptyStockPurchase();
@@ -542,7 +543,7 @@ export class AppComponent implements OnInit {
     return this.totalSales / days;
   }
   get totalPayments(): number { return this.entriesForSelection('overview').reduce((sum, e) => sum + Number(e.online_received || 0) + Number(e.offline_received || 0), 0); }
-  get pocketProfit(): number { const list = this.entriesForSelection('overview'); return list.reduce((sum, e) => sum + this.salesFor(e) - Number(e.staff_share || 0) - Number(e.cost_gap || 0) - Number(e.miscellaneous_expenses || 0), 0) - this.fixedCostForSelection('overview'); }
+  get pocketProfit(): number { const list = this.entriesForSelection('overview'); return list.reduce((sum, e) => sum + this.salesFor(e) - this.productCostFor(e) - Number(e.staff_share ?? (this.largeSalesFor(e) * this.settings.large_staff_pct / 100 + this.smallSalesFor(e) * this.settings.small_staff_pct / 100)) - Number(e.cost_gap || 0) - Number(e.miscellaneous_expenses || 0), 0) - this.fixedCostForSelection('overview'); }
   get reportFixedCost(): number { return this.fixedCostForSelection('report'); }
   private get reportSelectedCalendarDays(): number {
     const range = this.selectedRange(this.reportPreset, this.reportDate, this.reportStart, this.reportEnd);
@@ -566,7 +567,7 @@ export class AppComponent implements OnInit {
   get smallSales(): number { return Number(this.form.sold_small || 0) * Number(this.form.small_price ?? this.settings.small_price); }
   get salesTotal(): number { return this.largeSales + this.smallSales; }
   get staffShare(): number { return this.largeSales * this.settings.large_staff_pct / 100 + this.smallSales * this.settings.small_staff_pct / 100; }
-  get reportProfit(): number { return this.report.sales - this.report.staff - this.report.gap - this.report.misc - this.reportFixedCost; }
+  get reportProfit(): number { return this.report.sales - this.report.productCost - this.report.staff - this.report.gap - this.report.misc - this.reportFixedCost; }
   get overviewPeriodEntries(): Entry[] { return this.entriesForSelection('overview'); }
   get overviewMonthSales(): number { return this.overviewPeriodEntries.reduce((sum, e) => sum + this.salesFor(e), 0); }
   get overviewLargeSales(): number { return this.overviewPeriodEntries.reduce((sum, e) => sum + this.largeSalesFor(e), 0); }
@@ -603,26 +604,26 @@ export class AppComponent implements OnInit {
   }
   get overviewPerformance(): Entry[] { return this.overviewPeriodEntries.slice().sort((a,b)=>b.entry_date.localeCompare(a.entry_date)); }
   get overviewTotals(): {largeSold:number;smallSold:number;sales:number;payments:number;difference:number} { return this.overviewPeriodEntries.reduce((t,e)=>{const sales=this.salesFor(e);const payments=Number(e.online_received||0)+Number(e.offline_received||0);return {largeSold:t.largeSold+Number(e.sold_large||0),smallSold:t.smallSold+Number(e.sold_small||0),sales:t.sales+sales,payments:t.payments+payments,difference:t.difference+sales-payments};},{largeSold:0,smallSold:0,sales:0,payments:0,difference:0}); }
-  get reportDailySeries(): Array<{ entry_date: string; label: string; largeSales: number; smallSales: number; sales: number; payments: number; staffShare: number; costGap: number; miscCosts: number; otherCosts: number; net: number }> {
+  get reportDailySeries(): Array<{ entry_date: string; label: string; largeSales: number; smallSales: number; sales: number; payments: number; productCost: number; staffShare: number; costGap: number; miscCosts: number; otherCosts: number; net: number }> {
     const list = this.entriesForSelection('report').slice().sort((a,b)=>a.entry_date.localeCompare(b.entry_date));
     const range = this.selectedRange(this.reportPreset,this.reportDate,this.reportStart,this.reportEnd);
     const spanDays = Math.round((new Date(range.end+'T12:00:00').getTime()-new Date(range.start+'T12:00:00').getTime())/86400000)+1;
     const aggregateMonthly = spanDays > 31;
-    const map = new Map<string, {entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;net:number}>();
+    const map = new Map<string, {entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;productCost:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;net:number}>();
     for (const e of list) {
       const d = new Date(e.entry_date+'T12:00:00');
       const key = aggregateMonthly ? e.entry_date.slice(0,7) : e.entry_date;
       const label = aggregateMonthly ? d.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}) : d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
       const largeSales=this.largeSalesFor(e), smallSales=this.smallSalesFor(e), sales=largeSales+smallSales;
-      const payments=Number(e.online_received||0)+Number(e.offline_received||0);
+      const payments=Number(e.online_received||0)+Number(e.offline_received||0); const productCost=this.productCostFor(e);
       const staffShare=Number(e.staff_share ?? (largeSales*this.settings.large_staff_pct/100+smallSales*this.settings.small_staff_pct/100)); const costGap=Number(e.cost_gap||0); const miscCosts=Number(e.miscellaneous_expenses||0); const otherCosts=staffShare+costGap+miscCosts;
-      const prior=map.get(key) || {entry_date:key,label,largeSales:0,smallSales:0,sales:0,payments:0,staffShare:0,costGap:0,miscCosts:0,otherCosts:0,net:0};
-      prior.largeSales+=largeSales; prior.smallSales+=smallSales; prior.sales+=sales; prior.payments+=payments; prior.staffShare+=staffShare; prior.costGap+=costGap; prior.miscCosts+=miscCosts; prior.otherCosts+=otherCosts; prior.net+=sales-otherCosts; map.set(key,prior);
+      const prior=map.get(key) || {entry_date:key,label,largeSales:0,smallSales:0,sales:0,payments:0,productCost:0,staffShare:0,costGap:0,miscCosts:0,otherCosts:0,net:0};
+      prior.largeSales+=largeSales; prior.smallSales+=smallSales; prior.sales+=sales; prior.payments+=payments; prior.productCost+=productCost; prior.staffShare+=staffShare; prior.costGap+=costGap; prior.miscCosts+=miscCosts; prior.otherCosts+=otherCosts; prior.net+=sales-productCost-otherCosts; map.set(key,prior);
     }
-    if (aggregateMonthly) { const cursor=new Date(range.start+'T12:00:00'); const last=new Date(range.end+'T12:00:00'); cursor.setDate(1); while(cursor<=last){const key=`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;if(!map.has(key))map.set(key,{entry_date:key,label:cursor.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}),largeSales:0,smallSales:0,sales:0,payments:0,staffShare:0,costGap:0,miscCosts:0,otherCosts:0,net:0});cursor.setMonth(cursor.getMonth()+1);} }
+    if (aggregateMonthly) { const cursor=new Date(range.start+'T12:00:00'); const last=new Date(range.end+'T12:00:00'); cursor.setDate(1); while(cursor<=last){const key=`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;if(!map.has(key))map.set(key,{entry_date:key,label:cursor.toLocaleDateString('en-IN',{month:'short',year:'2-digit'}),largeSales:0,smallSales:0,sales:0,payments:0,productCost:0,staffShare:0,costGap:0,miscCosts:0,otherCosts:0,net:0});cursor.setMonth(cursor.getMonth()+1);} }
     return [...map.values()].sort((a,b)=>a.entry_date.localeCompare(b.entry_date));
   }
-  get reportTableRows(): Array<{entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;fixedCost:number;net:number}> {
+  get reportTableRows(): Array<{entry_date:string;label:string;largeSales:number;smallSales:number;sales:number;payments:number;productCost:number;staffShare:number;costGap:number;miscCosts:number;otherCosts:number;fixedCost:number;net:number}> {
     const range = this.selectedRange(this.reportPreset, this.reportDate, this.reportStart, this.reportEnd);
     return this.reportDailySeries.slice().reverse().map(day => {
       // Monthly buckets may cover only part of a month (for example, a custom range).
@@ -650,9 +651,9 @@ export class AppComponent implements OnInit {
   get reportOnlinePayments(): number { return this.entriesForSelection('report').reduce((sum, entry) => sum + Number(entry.online_received || 0), 0); }
   get reportOfflinePayments(): number { return this.entriesForSelection('report').reduce((sum, entry) => sum + Number(entry.offline_received || 0), 0); }
   get reportPayments(): number { return this.reportOnlinePayments + this.reportOfflinePayments; }
-  get reportTotalExpenses(): number { return this.report.staff + this.report.gap + this.report.misc + this.reportFixedCost; }
+  get reportTotalExpenses(): number { return this.report.productCost + this.report.staff + this.report.gap + this.report.misc + this.reportFixedCost; }
   get reportExpenseBreakdown(): Array<{ label: string; amount: number; width: string }> {
-    const items = [{label:'Staff share earned',amount:this.report.staff},{label:'Cost gap',amount:this.report.gap},{label:'Miscellaneous',amount:this.report.misc},{label:'Fixed cost',amount:this.reportFixedCost}];
+    const items = [{label:'Product cost',amount:this.report.productCost},{label:'Staff share earned',amount:this.report.staff},{label:'Cost gap',amount:this.report.gap},{label:'Miscellaneous',amount:this.report.misc},{label:'Fixed cost',amount:this.reportFixedCost}];
     const max=Math.max(1,...items.map(item=>item.amount)); return items.map(item=>({...item,width:`${Math.max(item.amount>0?2:0,item.amount/max*100)}%`}));
   }
   get overviewChartMax(): number { return Math.max(1, ...this.overviewTrend.map(day => day.sales)); }
@@ -1147,6 +1148,7 @@ export class AppComponent implements OnInit {
   largeSalesFor(e: Entry): number { return Number(e.large_sales ?? Number(e.sold_large || 0) * Number(e.large_price ?? this.settings.large_price)); }
   smallSalesFor(e: Entry): number { return Number(e.small_sales ?? Number(e.sold_small || 0) * Number(e.small_price ?? this.settings.small_price)); }
   salesFor(e: Entry): number { return this.largeSalesFor(e) + this.smallSalesFor(e); }
+  productCostFor(e: Entry): number { return Number(e.sold_large || 0) * 15 + Number(e.sold_small || 0) * 8; }
   onOverviewPeriodChange(): void { this.calculateReport(); }
   onReportPeriodChange(): void { this.calculateReport(); }
   onOverviewDateChange(): void { this.calculateReport(); }
@@ -1155,9 +1157,10 @@ export class AppComponent implements OnInit {
     const list = this.entriesForSelection('report');
     this.report = list.reduce((acc, e) => ({
       sales: acc.sales + this.salesFor(e),
+      productCost: acc.productCost + this.productCostFor(e),
       staff: acc.staff + Number(e.staff_share ?? (this.largeSalesFor(e) * this.settings.large_staff_pct / 100 + this.smallSalesFor(e) * this.settings.small_staff_pct / 100)),
       gap: acc.gap + Number(e.cost_gap || 0), misc: acc.misc + Number(e.miscellaneous_expenses || 0), paid: acc.paid + Number(e.staff_paid_today || 0)
-    }), { sales: 0, staff: 0, gap: 0, misc: 0, paid: 0 });
+    }), { sales: 0, productCost: 0, staff: 0, gap: 0, misc: 0, paid: 0 });
   }
   async loadFixedCosts(): Promise<void> {
     if (!this.supabase || !this.vendorId || !this.user) return;
