@@ -261,8 +261,8 @@ interface StockPurchase { id?: string; vendor_id?: string; purchase_date: string
             <h4>Staff settlement</h4>
             <div class="report-metric-grid report-metric-grid-three">
               <article class="stat"><span>Staff share earned</span><strong>{{ report.staff | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total staff share for this period</small></article>
-              <article class="stat"><span>Staff paid in advance</span><strong>{{ report.paid | currency:'INR':'symbol':'1.0-0' }}</strong><small>Total staff payments already made</small></article>
-              <article class="stat"><span>Staff share still due</span><strong>{{ (report.staff - report.paid) | currency:'INR':'symbol':'1.0-0' }}</strong><small>Staff share earned − Staff paid in advance</small></article>
+              <article class="stat"><span>Cost gap + staff paid in advance</span><strong>{{ reportStaffSettlementPaid | currency:'INR':'symbol':'1.0-0' }}</strong><small>Cost gap ({{ report.gap | currency:'INR':'symbol':'1.0-0' }}) + actual advance ({{ report.paid | currency:'INR':'symbol':'1.0-0' }}) = {{ reportStaffSettlementPaid | currency:'INR':'symbol':'1.0-0' }}</small></article>
+              <article class="stat"><span>Staff share still due</span><strong>{{ (report.staff - reportStaffSettlementPaid) | currency:'INR':'symbol':'1.0-0' }}</strong><small>Staff share earned − (cost gap + actual advance)</small></article>
             </div>
           </div>
         </section>
@@ -568,6 +568,7 @@ export class AppComponent implements OnInit {
   get salesTotal(): number { return this.largeSales + this.smallSales; }
   get staffShare(): number { return this.largeSales * this.settings.large_staff_pct / 100 + this.smallSales * this.settings.small_staff_pct / 100; }
   get reportProfit(): number { return this.report.sales - this.report.productCost - this.report.staff - this.report.gap - this.report.misc - this.reportFixedCost; }
+  get reportStaffSettlementPaid(): number { return this.report.gap + this.report.paid; }
   get overviewPeriodEntries(): Entry[] { return this.entriesForSelection('overview'); }
   get overviewMonthSales(): number { return this.overviewPeriodEntries.reduce((sum, e) => sum + this.salesFor(e), 0); }
   get overviewLargeSales(): number { return this.overviewPeriodEntries.reduce((sum, e) => sum + this.largeSalesFor(e), 0); }
@@ -1202,9 +1203,54 @@ export class AppComponent implements OnInit {
   async saveSettings(): Promise<void> {
     this.clearAlerts(); this.busy = true;
     try {
-      const { error } = await this.requireClient().from('product_settings').update({ ...this.settings, updated_by: this.user?.id }).eq('id', 1).eq('vendor_id', this.vendorId);
+      const client = this.requireClient();
+      const { error } = await client.from('product_settings').update({ ...this.settings, updated_by: this.user?.id }).eq('id', 1).eq('vendor_id', this.vendorId);
       if (error) throw error;
-      this.message = 'Product settings updated.';
+
+      // Recalculate staff share for every historical daily entry using the newly saved percentages.
+      // Read in pages so older records are not skipped by Supabase's default row limit.
+      const allEntries: Array<Record<string, any>> = [];
+      const pageSize = 500;
+      for (let from = 0; ; from += pageSize) {
+        const { data, error: entriesError } = await client
+          .from('daily_entries')
+          .select('id,sold_large,sold_small')
+          .eq('vendor_id', this.vendorId)
+          .order('entry_date', { ascending: true })
+          .range(from, from + pageSize - 1);
+        if (entriesError) throw entriesError;
+        const page = data || [];
+        allEntries.push(...page);
+        if (page.length < pageSize) break;
+      }
+
+      for (let offset = 0; offset < allEntries.length; offset += pageSize) {
+        const entryBatch = allEntries.slice(offset, offset + pageSize);
+        const ids = entryBatch.map(entry => String(entry['id']));
+        const { data: financialRows, error: financialReadError } = await client
+          .from('daily_financials')
+          .select('daily_entry_id,large_sales,small_sales,large_price,small_price')
+          .in('daily_entry_id', ids);
+        if (financialReadError) throw financialReadError;
+        const financialById = new Map<string, Record<string, any>>((financialRows || []).map((row: Record<string, any>) => [String(row['daily_entry_id']), row]));
+        const batch = entryBatch.map(entry => {
+          const financial = financialById.get(String(entry['id'])) || {};
+          const largeSales = Number(financial['large_sales'] ?? Number(entry['sold_large'] || 0) * Number(financial['large_price'] ?? this.settings.large_price));
+          const smallSales = Number(financial['small_sales'] ?? Number(entry['sold_small'] || 0) * Number(financial['small_price'] ?? this.settings.small_price));
+          return {
+            daily_entry_id: String(entry['id']),
+            staff_share: largeSales * Number(this.settings.large_staff_pct) / 100 + smallSales * Number(this.settings.small_staff_pct) / 100
+          };
+        });
+        if (batch.length) {
+          const { error: recalculationError } = await client
+            .from('daily_financials')
+            .upsert(batch, { onConflict: 'daily_entry_id' });
+          if (recalculationError) throw recalculationError;
+        }
+      }
+
+      this.message = `Product settings updated. Staff share recalculated for ${allEntries.length} existing daily record(s).`;
       await this.loadEntries();
     } catch (e) { this.error = this.errMsg(e); }
     finally { this.busy = false; }
